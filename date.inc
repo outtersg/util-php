@@ -1,0 +1,333 @@
+<?php
+/*
+ * Copyright (c) 2003 Guillaume Outters
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*- Débogage -----------------------------------------------------------------*/
+
+function aff_tableau($tableau)
+{
+	$machin = '';
+	for($i = 0; $i < count($tableau); ++$i)
+		$machin .= (($i == 0 ? '[' : ', ').$tableau[$i]);
+	$machin .= ']';
+	return $machin;
+}
+
+function date_affichage_tableau($tableau)
+{
+	$masque = 0;
+	
+	/* Jour */
+	
+	$jour = '';
+	for($i = 0; $i < 3; ++$i)
+		if((($nombre = $tableau[$i]) >= 0) || ($i == 1 && $tableau[0] >= 0 && $tableau[2] >= 0))
+		{
+			if($nombre < 0) $nombre = 1;
+			if($i == 0)
+				$jour = sprintf('%04d', $nombre);
+			else
+				$jour .= sprintf('%s%02d', ($masque ? '-' : ''), $nombre);
+			$masque = 2;
+		}
+	
+	/* Heure */
+	
+	if(($tableau[3] >= 0) || ($tableau[4] >= 0) || ($tableau[5] >= 0))
+	{
+		if(($h = $tableau[3]) < 0) $h = 0;
+		if(($m = $tableau[4]) < 0) $m = 0;
+		$heure = sprintf('%02d:%02d', $h, $m);
+		if(($i = $tableau[5]) >= 0)
+			$heure .= sprintf(':%02d', $i);
+		$masque |= 1;
+	}
+	
+	return $jour.($masque == 3 ? ' ' : '').$heure;
+}
+
+function date_affichage($date)
+{
+	return strftime('%Y-%m-%d %H:%M:%S', $date);
+}
+
+/*- Découpage de dates et heures ---------------------------------------------*/
+
+$g_nomChamps = array('heures', 'minutes', 'secondes');
+$g_chiffres = '0123456789';
+
+$GLOBALS['deb'] = false;
+
+function decouper_datation($date)
+{
+	return decouper_heure($date, true);
+}
+
+function decouper_heure($date, $tenterAussiLaDate)
+{
+	$retour = array();
+	$fin = strlen($date);
+	
+	/* Prélèvement de l'horaire */
+	
+	$valeurs = array();
+	$suggestion = array(-1); // 0: heure; 1: minute; 2: seconde; calculé à partir du délimiteur suivant le nombre.
+	$suggestion2 = array(); // Pareil, mais calculé par le délimiteur précédent le nombre.
+	while($fin > 0)
+	{
+		/* Recherche du nombre */
+		
+		$debut = $fin;
+		while(--$debut >= 0 && false !== strpos($GLOBALS['g_chiffres'], $c = $date{$debut})) {}
+		$valeurs[] = ($debut + 1 < $fin ? intval(substr($date, $debut + 1, $fin)) : -1);
+		
+		/* Interprétation du séparateur */
+		
+		if($debut < 0)
+			$suggestion2[] = 0;
+		else if($c == ' ')
+			$suggestion2[] = 0;
+		else if($c == 'h')
+		{
+			$suggestion[] = 0;
+			$suggestion2[] = 1;
+		}
+		else if($c == "'")
+		{
+			$suggestion[] = 1;
+			$suggestion2[] = 2;
+		}
+		else if($c == '"')
+			$suggestion[] = 2;
+		else if($c != ':')
+		{
+			if($tenterAussiLaDate)
+				return assembler_datation(decouper_date($date), array(-1, -1, -1));
+			print('### délimiteur horaire non reconnu: \''.$c.'\' dans '.$date.'.<br/>');
+			return null;
+		}
+		
+		if(count($suggestion) < count($valeurs))
+			$suggestion[] = -1;
+		if(count($suggestion2) < count($valeurs) + 1)
+			$suggestion2[] = -1;
+		
+		$fin = $debut;
+		
+		if($c == ' ') break;
+	}
+	
+	/* Rangement de l'horaire dans les bonnes cases */
+	
+	$rangement = array(-1, -1, -1); // Indice dans $valeurs du machin qui doit aller dans la case correspondante; plus tard on y mettra la valeur elle-même, mais à chaque jour suffit sa peine.
+	
+	for($debut = count($valeurs); --$debut >= 0;) // Première passe: les champs dont on est sûr de la destination (le $suggestion correspondant a une valeur positive).
+		if($valeurs[$debut] >= 0 && $suggestion[$debut] >= 0)
+			if($rangement[$suggestion[$debut]] < 0)
+			{
+				$rangement[$suggestion[$debut]] = $debut;
+				$suggestion2[$debut] = -1;
+			}
+			else
+			{
+				print('### le champ \''.$g_nomChamps[$suggestion[$debut]].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
+				return null;
+			}
+	
+	for($j = count($rangement); --$j >= 0;) // Deuxième passe: les suggestions un peu moins fiables sont utilisées pour remplir les trous
+		if($rangement[$j] < 0) // Pas trouvé à la première passe.
+			for($debut = count($valeurs); --$debut >= 0;)
+				if($valeurs[$debut] >= 0 && $suggestion2[$debut] == $j)
+					if($rangement[$j] < 0)
+						$rangement[$j] = $debut;
+					else
+					{
+						print('### le champ \''.$g_nomChamps[$j].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
+						return null;
+					}
+	
+	for($j = 0, $debut = count($valeurs); $j < count($rangement); ++$j) // Dernière passe: remplissage avec ce qui reste, dans l'ordre commun: heure-minute-seconde.
+		if($rangement[$j] < 0) // Un truc restant à remplir.
+		{
+			while(--$debut >= 0 && ($valeurs[$debut] < 0 || $suggestion[$debut] >= 0 || $suggestion2[$debut] >= 0)) {} // Tant qu'on a des valeurs, invalides ou déjà exploitées, on remonte.
+			if($debut < 0) break;
+			$rangement[$j] = $valeurs[$debut]; // On stocke directement la valeur.
+		}
+		else
+			$rangement[$j] = $valeurs[$rangement[$j]]; // On en profite pour faire le remplissage définitif, avec les valeurs.
+	
+	if($j < 2) // Un seul nombre ne nous suffit pas à l'accepter en tant qu'heure seule.
+	{
+		for($j = count($valeurs); --$j >= 0;)
+			if($valeurs[$j] >= 0)
+				break;
+		if($suggestion[$j] < 0) // Bon, si on a trouvé un marquage fort, on continue en considérant qu'il s'agit d'une heure.
+		{
+			if($tenterAussiLaDate)
+				return assembler_datation(decouper_date($date), array(-1, -1, -1));
+			print('### heure incomplète dans '.$date.' (il faut au moins les heures et minutes).<br/>');
+			return null;
+		}
+	}
+	
+	/* Interprétation de la date */
+	
+	return ($tenterAussiLaDate ? assembler_datation($fin > 0 ? decouper_date(substr($date, 0, $fin)) : array(-1, -1, -1), $rangement) : $rangement);
+}
+
+function decouper_date($date)
+{
+	if(strlen($date) == 0) return array(-1, -1, -1);
+	
+	/* Stockage des valeurs */
+	
+	$fin = strlen($date);
+	$valeurs = array();
+	$sep = null; // Séparateur; on s'attend à avoir toujours le même.
+	$longueurs = array(); // Longueur de chaque champ.
+	while($fin > 0)
+	{
+		$debut = $fin;
+		while(--$debut >= 0 && false !== strpos($GLOBALS['g_chiffres'], $c = $date{$debut})) {}
+		if($debut == $fin - 1)
+		{
+			print('### double séparateur dans la date '.$date.'.<br/>');
+			return null;
+		}
+		$valeurs[] = intval(substr($date, $debut + 1, $fin));
+		$longueurs[] = $fin - $debut - 1;
+		if($debut < 0) break;
+		
+		if($sep == null)
+		{
+			if($c != '/' && $c != '-')
+			{
+				print('### \''.$c.'\' inutilisable comme séparateur de date ('.$date.').<br/>');
+				return null;
+			}
+			$sep = $c;
+		}
+		else if($sep != $c)
+		{
+			print('### séparateurs inconsistents dans la date '.$date.'.<br/>');
+			return null;
+		}
+		
+		$fin = $debut;
+	}
+	
+	/* Finalisation */
+	
+	$fin = count($valeurs);
+	if($fin > 3)
+	{
+		print('### la date '.$date.' contient trop de champ. Je m\'attendais à un simple an-mois-jour, sans précision du jour de la semaine ni de l\'époque Ming en cours.<br/>');
+		return null;
+	}
+	
+	if($sep == '-' || $sep == null) // Mode ISO, à remettre en bon ordre (parce qu'on a interprété en inverse).
+	{
+		if($fin >= 2)
+		{
+			$debut = $valeurs[0];
+			$valeurs[0] = $valeurs[$fin - 1];
+			$valeurs[$fin - 1] = $debut;
+		}
+	}
+	
+	/* Recherche de l'année (quatre chiffres); On décale en conséquence. */
+	
+	if($fin > 0 && $longueurs[0] == 4) // La date contient une année; elle reste en première position.
+		while($fin < 3) { $valeurs[] = -1; ++$fin; }
+	else // Pas trouvé d'année, on complète par des -1 (ce qui nous donne: 1 élément: jour; 2: jour et mois, 3: ben tout).
+	{
+		for($debut = 3; --$fin >= 0;)
+			$valeurs[--$debut] = $valeurs[$fin];
+		while(--$debut >= 0)
+			$valeurs[$debut] = -1;
+	}
+	
+	return $valeurs;
+}
+
+function assembler_datation($tabDate, $tabHoraire)
+{
+	if($tabDate == null || $tabHoraire == null) return null;
+	for($i = 0; $i < count($tabHoraire); ++$i)
+		$tabDate[] = $tabHoraire[$i];
+	
+	return $tabDate;
+}
+
+/*- Calculs sur tableaux de dates --------------------------------------------*/
+
+function completer_datation($original, $avec)
+{
+	if($original == null) return $avec;
+	if($avec == null) return $original;
+	for($i = 6; --$i >= 0;)
+		if($avec[$i] >= 0)
+			$original[$i] = $avec[$i];
+	return $original;
+}
+
+function calculer_datation($chose)
+{
+	/* Un mktime avec des -1, ça ne va pas être terrible. */
+	foreach($chose as $val)
+		if($val < 0)
+		{
+			$chose = completer_datation(array(1970, 1, 1, 0, 0, 0), $chose);
+			break;
+		}
+	return mktime($chose[3], $chose[4], $chose[5], $chose[1], $chose[2], $chose[0] >= 0 ? $chose[0] : 0);
+}
+
+/*- Tests --------------------------------------------------------------------*/
+
+function tester_decoupage_datation()
+{
+	$tests = array
+	(
+		'2003-08-30',
+		'31/8 12:07',
+		'8h00',
+		'23',
+		'2003-08-24 03:16:48',
+		'23/08/2003 23:13:22',
+	);
+	for($y = count($tests); --$y >= 0;)
+		afficher_test_decoupage_datation($tests[$y]);
+}
+
+function afficher_test_decoupage_datation($date)
+{
+	$tableau = decouper_datation($date);
+	if($tableau != null)
+	{
+		print('  '.aff_tableau($tableau).': '.$date.'<br/>');
+	}
+	else
+		print('(échec pour '.$date.')<br/>');
+}
+
+?>
