@@ -72,8 +72,8 @@ function date_affichage($date)
 
 /*- Découpage de dates et heures ---------------------------------------------*/
 
-$g_nomChamps = array('heures', 'minutes', 'secondes');
-$g_chiffres = '0123456789';
+$GLOBALS['g_nomChamps'] = array('heures', 'minutes', 'secondes');
+$GLOBALS['g_chiffres'] = '0123456789';
 
 $GLOBALS['deb'] = false;
 
