@@ -39,10 +39,11 @@ class Chargeur
 	function charger($chemin, $nomRacine, &$traiteurRacine, $fatal = false)
 	{
 		$r = true;
+		if(is_a($chemin, Chemin)) $chemin = $chemin->cheminComplet();
 		
-		if(!($fichier = @fopen($chemin->cheminComplet(), 'r')))
+		if(!($fichier = @fopen($chemin, 'r')))
 			if($fatal)
-				die('Ouverture de fichier impossible: '.$chemin->cheminComplet());
+				die('Ouverture de fichier impossible: '.$chemin);
 			else
 				return false;
 		
@@ -88,7 +89,7 @@ class Chargeur
 				$aFaire = $posFermeture == $taille ? $donnees : substr($donnees, 0, $posFermeture);
 				if(!xml_parse($interprete, $mem === null ? $aFaire : $mem.$aFaire, $fin))
 					if($fatal)
-						die(sprintf('Erreur XML: %s, ligne %d: %s', $chemin->cheminComplet(), xml_get_current_line_number($interprete), xml_error_string(xml_get_error_code($interprete))));
+						die(sprintf('Erreur XML: %s, ligne %d: %s', $chemin, xml_get_current_line_number($interprete), xml_error_string(xml_get_error_code($interprete))));
 					else
 						$r = false;
 				$mem = null;
@@ -109,10 +110,11 @@ class Chargeur
 	function chargerSansGroupage($chemin, $nomRacine, &$traiteurRacine, $fatal = false)
 	{
 		$r = true;
+		if(is_a($chemin, Chemin)) $chemin = $chemin->cheminComplet();
 		
-		if(!($fichier = @fopen($chemin->cheminComplet(), 'r')))
+		if(!($fichier = @fopen($chemin, 'r')))
 			if($fatal)
-				die('Ouverture de fichier impossible: '.$chemin->cheminComplet());
+				die('Ouverture de fichier impossible: '.$chemin);
 			else
 				return false;
 		
@@ -126,7 +128,7 @@ class Chargeur
 		while($donnees = fread($fichier, 4096))
 			if(!xml_parse($interprete, $donnees, feof($fichier)))
 				if($fatal)
-					die(sprintf('Erreur XML: %s, ligne %d: %s', $chemin->cheminComplet(), xml_get_current_line_number($interprete), xml_error_string(xml_get_error_code($interprete))));
+					die(sprintf('Erreur XML: %s, ligne %d: %s', $chemin, xml_get_current_line_number($interprete), xml_error_string(xml_get_error_code($interprete))));
 				else
 					$r = false;
 		xml_parser_free($interprete);
