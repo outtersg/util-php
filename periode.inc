@@ -21,6 +21,8 @@
  * SOFTWARE.
  */
 
+require_once('date.inc');
+
 /* La période est un couple de dates en tableau. Cf. date.inc */
 
 /* À FAIRE: possibilités de formatage plus élaborées (déjà, remplacer le - entre
