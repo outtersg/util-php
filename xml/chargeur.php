@@ -36,6 +36,16 @@ class Chargeur
 	public $mem = null;
 	public $tailleBloc = 0x1000;
 	
+	# Charge un fichier XML
+	# Paramètres:
+	#   chemin: chemin du fichier à charger. Chemin ou chaîne de caractères.
+	#   nomRacine: nom prévu pour la racine XML. Si ce paramètre est null, le
+	#     traiteurRacine sera appelé directement. Sinon, il sera appelé pour les
+	#     fils de la racine (il est donc utile de le mettre à null si on
+	#     s'intéresse aux attributs de la racine).
+	#   traiteurRacine: objet de type Compo qui recevra les événements d'entrée
+	#     et sortie de la racine ou de ses fils (en fonction de nomRacine).
+	#   fatal: si true, une erreur de lecture tue le programme.
 	function charger($chemin, $nomRacine, &$traiteurRacine, $fatal = false)
 	{
 		$r = true;
