@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2003 Guillaume Outters
+ * Copyright (c) 2003,2005 Guillaume Outters
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -300,6 +300,28 @@ function calculer_datation($chose)
 			break;
 		}
 	return mktime($chose[3], $chose[4], $chose[5], $chose[1], $chose[2], $chose[0] >= 0 ? $chose[0] : 0);
+}
+
+/* Renvoie un nombre inférieur, égal ou supérieur à 0 selon que le premier
+ * paramètre est gnagnagna, gnagnagna ou gnagnagna blabla. Ne fonctionne pas
+ * forcément si vous laissez trop de trous dans vos dates. */
+function comparer_datations($d0, $d1)
+{
+	if($d0 === null)
+		if($d1 === null)
+			return 0;
+		else
+			return -2;
+	if($d1 === null)
+		return 2;
+	for($i = 0; $i < 6; ++$i)
+	{
+		if(($d0[$i] < 0 && $d1[$i] >= 0) || ($d1[$i] < 0 && $d0[$i] >= 0))
+			return 0; // Vous êtes incomparables, toutes les deux.
+		if($d0[$i] < $d1[$i]) return -1;
+		if($d0[$i] > $d1[$i]) return 1;
+	}
+	return 0;
 }
 
 /*- Tests --------------------------------------------------------------------*/
