@@ -122,7 +122,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 		{
 			if($tenterAussiLaDate)
 				return assembler_datation(decouper_date($date), array(-1, -1, -1));
-			print('### délimiteur horaire non reconnu: \''.$c.'\' dans '.$date.'.<br/>');
+			//print('### délimiteur horaire non reconnu: \''.$c.'\' dans '.$date.'.<br/>');
 			return null;
 		}
 		
@@ -149,7 +149,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 			}
 			else
 			{
-				print('### le champ \''.$g_nomChamps[$suggestion[$debut]].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
+				//print('### le champ \''.$g_nomChamps[$suggestion[$debut]].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
 				return null;
 			}
 	
@@ -161,7 +161,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 						$rangement[$j] = $debut;
 					else
 					{
-						print('### le champ \''.$g_nomChamps[$j].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
+						//print('### le champ \''.$g_nomChamps[$j].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
 						return null;
 					}
 	
@@ -184,7 +184,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 		{
 			if($tenterAussiLaDate)
 				return assembler_datation(decouper_date($date), array(-1, -1, -1));
-			print('### heure incomplète dans '.$date.' (il faut au moins les heures et minutes).<br/>');
+			//print('### heure incomplète dans '.$date.' (il faut au moins les heures et minutes).<br/>');
 			return null;
 		}
 	}
@@ -210,7 +210,7 @@ function decouper_date($date)
 		while(--$debut >= 0 && false !== strpos($GLOBALS['g_chiffres'], $c = $date{$debut})) {}
 		if($debut == $fin - 1)
 		{
-			print('### double séparateur dans la date '.$date.'.<br/>');
+			//print('### double séparateur dans la date '.$date.'.<br/>');
 			return null;
 		}
 		$valeurs[] = intval(substr($date, $debut + 1, $fin));
@@ -221,14 +221,14 @@ function decouper_date($date)
 		{
 			if($c != '/' && $c != '-')
 			{
-				print('### \''.$c.'\' inutilisable comme séparateur de date ('.$date.').<br/>');
+				//print('### \''.$c.'\' inutilisable comme séparateur de date ('.$date.').<br/>');
 				return null;
 			}
 			$sep = $c;
 		}
 		else if($sep != $c)
 		{
-			print('### séparateurs inconsistents dans la date '.$date.'.<br/>');
+			//print('### séparateurs inconsistents dans la date '.$date.'.<br/>');
 			return null;
 		}
 		
@@ -240,7 +240,7 @@ function decouper_date($date)
 	$fin = count($valeurs);
 	if($fin > 3)
 	{
-		print('### la date '.$date.' contient trop de champ. Je m\'attendais à un simple an-mois-jour, sans précision du jour de la semaine ni de l\'époque Ming en cours.<br/>');
+		//print('### la date '.$date.' contient trop de champ. Je m\'attendais à un simple an-mois-jour, sans précision du jour de la semaine ni de l\'époque Ming en cours.<br/>');
 		return null;
 	}
 	
