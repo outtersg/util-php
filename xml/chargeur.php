@@ -57,7 +57,7 @@ class Chargeur
 			else
 				return false;
 		
-		$this->pile[] = new GobeurRacine($nomRacine, &$traiteurRacine);
+		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, &$traiteurRacine);
 		$interprete = xml_parser_create();
 		xml_parser_set_option($interprete, XML_OPTION_CASE_FOLDING, FALSE);
 		xml_set_object($interprete, &$this);
@@ -128,7 +128,7 @@ class Chargeur
 			else
 				return false;
 		
-		$this->pile[] = new GobeurRacine($nomRacine, &$traiteurRacine);
+		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, &$traiteurRacine);
 		$interprete = xml_parser_create();
 		xml_parser_set_option($interprete, XML_OPTION_CASE_FOLDING, FALSE);
 		xml_set_object($interprete, &$this);
