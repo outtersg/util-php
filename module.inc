@@ -23,7 +23,7 @@
 
 /* Renvoie une liste de modules. Un module est un script PHP additionnel,
  * qui peut être inclus par l'appelant.
- * $cheminDossier: objet Chemin, donnant le contenant des modules.
+ * $cheminDossier: dossier devant contenir les modules.
  * $type: type de modules recherchés:
  *   0: tout fichier du répertoire, possédant le suffixe, est considéré comme un
  *      module.
@@ -33,19 +33,15 @@
  */
 function module_liste($cheminDossier, $type, $suffixe = '.inc')
 {
-	$dossier = opendir($cheminDossier->cheminComplet());
+	if(is_a($cheminDossier, Chemin)) $cheminDossier = $cheminDossier->cheminComplet();
+	
+	$dossier = opendir($cheminDossier);
 	if($type)
 	{
 		while(($nomRessource = readdir($dossier)))
-		{
-			$chemin = $cheminDossier->et($nomRessource);
-			if(is_dir($chemin->cheminComplet()))
-			{
-				$chemin = $cheminDossier->et($nomRessource.'/'.$nomRessource.$suffixe);
-				if(is_file($chemin->cheminComplet()))
+			if(is_dir($cheminDossier.'/'.$nomRessource))
+				if(is_file($cheminDossier.'/'.$nomRessource.'/'.$nomRessource.$suffixe))
 					$liste[] = $nomRessource;
-			}
-		}
 	}
 	else
 	{
