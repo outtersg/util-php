@@ -42,4 +42,17 @@ function html_enTete($xhtml = true)
 <?php
 	}
 }
+
+function html_corps($complement = null)
+{
+	echo '</head>'."\n".($complement ? '<body '.$complement.'>' : '<body>')."\n";
+}
+
+function html_fin()
+{
+?>
+</body>
+</html>
+<?php
+}
 ?>
