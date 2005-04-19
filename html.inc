@@ -43,6 +43,11 @@ function html_enTete($xhtml = true)
 	}
 }
 
+function html_meta($meta, $xhtml = true)
+{
+	echo '<'.$meta.($xhtml ? '/>' : '>'); // En HTML 4, cette balise n'a pas le droit d'être fermée.
+}
+
 function html_corps($complement = null)
 {
 	echo '</head>'."\n".($complement ? '<body '.$complement.'>' : '<body>')."\n";
