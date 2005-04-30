@@ -61,7 +61,7 @@ class FichierZip
 		if($this->methode) $tailleCompr = 0;
 		while(!feof($f))
 		{
-			$octets = fread($f, 0x10000); // On ne va pas y aller à la petite cuillère.
+			$octets = fread($f, 0x8000); // On ne va pas y aller à la petite cuillère.
 			$tailleBloc = strlen($octets);
 			$taille += $tailleBloc;
 			$controle = crc32_continu($octets, $controle);
