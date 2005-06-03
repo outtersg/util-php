@@ -293,12 +293,8 @@ function completer_datation($original, $avec)
 function calculer_datation($chose)
 {
 	/* Un mktime avec des -1, ça ne va pas être terrible. */
-	foreach($chose as $val)
-		if($val < 0)
-		{
-			$chose = completer_datation(array(1970, 1, 1, 0, 0, 0), $chose);
-			break;
-		}
+	if($chose == null || in_array(-1, $chose))
+		$chose = completer_datation(array(1970, 1, 1, 0, 0, 0), $chose);
 	return mktime($chose[3], $chose[4], $chose[5], $chose[1], $chose[2], $chose[0] >= 0 ? $chose[0] : 0);
 }
 
