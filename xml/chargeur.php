@@ -161,8 +161,8 @@ class Chargeur
 		$dernier = &$this->pile[count($this->pile)-1];
 		if(is_a(&$dernier, Compo))
 			$dernier->sortir();
-		$courant = &$this->courant();
 		array_pop($this->pile);
+		$courant = &$this->courant();
 		$courant->sortirDe(&$dernier);
 	}
 	
