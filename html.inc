@@ -21,6 +21,8 @@
  * SOFTWARE.
  */
 
+/*- Structure ----------------------------------------------------------------*/
+
 function html_enTete($xhtml = true)
 {
 	if($xhtml)
@@ -60,4 +62,23 @@ function html_fin()
 </html>
 <?php
 }
+
+/*- Chaînes ------------------------------------------------------------------*/
+
+/* Renvoie la version utilisable en JavaScript d'une chaîne.
+ * Le code JavaScript doit commencer par des balises de commentaire XML. */
+function html_chaineJS($chaine)
+{
+	/* Une sorte de consensus sur le non-respect de la norme XML semble s'être
+	 * établi: bien que la norme dise que les caractères & et < ne peuvent
+	 * apparaître que dans des commentaires, sections CDATA et directives <?,
+	 * aussi bien Safari que Firefox n'en ont rien à foutre et acceptent
+	 * gaillardement ces caractères dans des bouts de JS. Le validator W3C, lui,
+	 * n'a pas trop l'air au courant, donc il se contente d'émettre un warning.
+	 * La solution CDATA affole complètement les deux navigateurs, reste donc la
+	 * bonne vieille méthode de commencer toutes ses sections JS par des
+	 * commentaires. */
+	return strtr($chaine, array(/*'&' => '&amp;', '<' => '&lt;', '>' => '&gt;',*/ '\'' => '\\\'', '\\' => '\\\\'));
+}
+
 ?>
