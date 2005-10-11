@@ -127,10 +127,25 @@ class Chemin
 		
 		if($nom == null && $sens == -1)
 		{
-			$chemin = clone $this->depuis;
-			$chem = $this->cheminDossier();
-			$chemin->decouper($this->cheminDossier()); /* À FAIRE: utiliser un découper qui ne se refarcisse pas le découpage. */
-			$nom = $chemin->chemin[$n - 1];
+			$chemin = $this->chemin;
+			while($sens < 0) // On remonte jusqu'à tomber sur du positif.
+			{
+				if(($n -= 2) < 0) // On a épuisé le chemin.
+				{
+					if($nom === null && $this->protocole === null) // Mais il reste peut-être encore notre $this->depuis.
+					{
+						$chemin = $this->depuis->chemin;
+						$n = count($chemin);
+						$nom = 'fini';
+					}
+					else
+						break;
+				}
+				else
+					$sens += $chemin[$n];
+			}
+			$nom = $n >= 0 ? $chemin[$n + 1] : null;
+			$sens = -1;
 		}
 		
 		/* Cas simple */
