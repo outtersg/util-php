@@ -298,6 +298,12 @@ function calculer_datation($chose)
 	return mktime($chose[3], $chose[4], $chose[5], $chose[1], $chose[2], $chose[0] >= 0 ? $chose[0] : 0);
 }
 
+function obtenir_datation($secondes)
+{
+	$t = getdate($secondes);
+	return array($t['year'], $t['mon'], $t['mday'], $t['hours'], $t['minutes'], $t['seconds']);
+}
+
 /* Renvoie un nombre inférieur, égal ou supérieur à 0 selon que le premier
  * paramètre est gnagnagna, gnagnagna ou gnagnagna blabla. Ne fonctionne pas
  * forcément si vous laissez trop de trous dans vos dates. */
