@@ -81,4 +81,19 @@ function html_chaineJS($chaine)
 	return strtr($chaine, array(/*'&' => '&amp;', '<' => '&lt;', '>' => '&gt;',*/ '\'' => '\\\'', '\\' => '\\\\'));
 }
 
+/*- Stockage -----------------------------------------------------------------*/
+
+function html_session()
+{
+	/* Stockage de session par cookies? Et comment vous faites pour vous loguer
+	 * sous deux comptes différents dans le même navigateur? */
+	
+	try
+	{
+		@ini_set("session.use_cookies", false);
+		@ini_set("session.use_trans_sid", true);
+	} catch(Exception $e) {}
+	session_start();
+}
+
 ?>
