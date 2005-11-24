@@ -28,6 +28,7 @@
  *      (form global émettant en POST HTTP).
  * - 2: renvoi d'affectations javascript (les variables JS ont le même nom que
  *      celles PHP).
+ * - 3: renvoi d'inputs HTML, à insérer directement dans la page.
  */
 function params_decomposer($nom, $tableau, $mode = 0)
 {
@@ -58,14 +59,20 @@ function params_decomposer($nom, $tableau, $mode = 0)
 				$retour .= params_decomposer($nomCompose, $valeur, $mode);
 			else
 			{
-				if($mode == 0)
-					$retour .= '&'.$nomCompose.'='.$valeur;
-				else if($mode == 1)
+				switch($mode)
 				{
+					case 0:
+					$retour .= '&'.$nomCompose.'='.$valeur;
+					break;
+					case 1:
 					$retour .= "\n".'temp = document.createElement(\'input\');';
 					$retour .= "\n".'temp.setAttribute(\'name\', \''.$nomCompose.'\');';
 					$retour .= "\n".'temp.setAttribute(\'value\', \''.$valeur.'\');';
 					$retour .= "\n".'g_params.appendElement(temp);';
+					break;
+					case 3:
+						$retour .= "\n".'<input type="hidden" name="'.$nomCompose.'" value="'.$valeur.'"/>';
+						break;
 				}
 			}
 		}
