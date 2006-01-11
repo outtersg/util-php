@@ -91,4 +91,25 @@ function params_combiner($tableau1, $tableau2)
 	}
 }
 
+function params_purgerReçusRécursivement(&$params)
+{
+	foreach(array_keys($params) as $cle)
+	{
+		if(is_array($params[$cle]))
+			params_purgerReçusRécursivement(&$params[$cle]);
+		else
+			$params[$cle] = stripslashes($params[$cle]);
+	}
+}
+
+/* Vire d'un tableau reçu en POST ou GET tous les antislashes que cette
+ * putasserie de PHP, avec sa directive magic_quotes_gpc, ajoute pour les
+ * script kiddies. Enfin, ça n'est pas la première fois (ni sans doute la
+ * dernière) que j'imagine que ce langage a été conçu dans un fût de vodka. */
+function params_purgerReçus(&$params)
+{
+	if(get_magic_quotes_gpc()) // Mais il y a vraiment des abrutis sur cette terre, pour introduire une fonctionnalité comme celle-là dans le seul but de faciliter la vie d'autres abrutis et faire ch… en même temps tous les développeurs dignes de ce nom! http://www.webmasterstop.com/63.html
+		params_purgerReçusRécursivement(&$params);
+}
+
 ?>
