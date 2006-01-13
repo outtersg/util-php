@@ -96,4 +96,11 @@ function html_session()
 	session_start();
 }
 
+/*- Éléments d'interface -----------------------------------------------------*/
+
+function html_cac($nom, $intitulé, $alt = null)
+{
+	return '<input type="checkbox" name="'.$nom.'" alt="'.$alt.'"></input><span onclick="z = this.previousSibling; z.checked = !z.checked;">'.$intitulé.'</span>';
+}
+
 ?>
