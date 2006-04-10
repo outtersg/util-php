@@ -45,7 +45,7 @@ function params_decomposer($nom, $tableau, $mode = 0)
 			if(is_array($valeur))
 				$retour .= params_decomposer($cle, $valeur, $mode);
 			else
-				$retour .= $cle.": '".strtr($valeur, array("\r\n" => '\n', "\n" => '\n'))."'"; // À FAIRE: beaucoup plus de remplacements. */
+				$retour .= $cle.": '".strtr($valeur, array("\r\n" => '\n', "\n" => '\n', "'" => "\\'"))."'"; // À FAIRE: beaucoup plus de remplacements. */
 		}
 		$retour .= ' }';
 	}
@@ -71,7 +71,7 @@ function params_decomposer($nom, $tableau, $mode = 0)
 					$retour .= "\n".'g_params.appendElement(temp);';
 					break;
 					case 3:
-						$retour .= "\n".'<input type="hidden" name="'.$nomCompose.'" value="'.$valeur.'"/>';
+						$retour .= "\n".'<input type="hidden" name="'.$nomCompose.'" value="'.htmlspecialchars($valeur).'"/>';
 						break;
 				}
 			}
