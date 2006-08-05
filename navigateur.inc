@@ -123,7 +123,7 @@ class Navigateur
 				$this->cookies[substr($enTete, 0, $pos)] = substr($enTete, $pos);
 			}
 		}
-		else if(strpos($enTete, 'Location: ') === 0)
+		else if(strpos($enTete, 'Location: ') === 0 || strpos($enTete, 'location: ') === 0) // Sale con d'IIS de photoservice.com!
 			$this->suivre = strtr(substr($enTete, 0xa), array("\n" => '', "\r" => '')); // Un caractère retour à la fin.
 	}
 	
