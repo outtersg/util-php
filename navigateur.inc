@@ -42,6 +42,23 @@ class Navigateur
 			$this->cookiesTasses .= '; '.$noms[$n].$this->cookies[$noms[$n]];
 	}
 	
+	/* Calcule l'URL absolue atteinte depuis le nœud courant en attaquant une
+	 * URL absolue, relative ou racine. */
+	function url($url)
+	{
+			if($url{0} == '/') // URL absolue sur le même site.
+			{
+				$pos = strpos($this->derniere, '/', strpos($this->derniere, '://') + 3);
+				return ($pos === false ? $this->derniere : substr($this->derniere, 0, $pos)).$url;
+			}
+			else if(strpos($url, 'http://') !== 0) // URL relative
+			{
+				if(($pos = strrpos($this->derniere, '/')) != 0)
+					return substr($this->derniere, 0, $pos + 1).$url;
+			}
+			return $url;
+	}
+	
 	/* Récupère une URL.
 	 * Paramètres:
 	 *   url: URL à obtenir
@@ -64,16 +81,7 @@ class Navigateur
 			//curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
 			//curl_setopt($c, CURLOPT_MAXREDIRS, 0x8);
 			curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-			if($url{0} == '/') // URL absolue sur le même site.
-			{
-				$pos = strpos($this->derniere, '/', strpos($this->derniere, '://') + 3);
-				$url = ($pos === false ? $this->derniere : substr($this->derniere, 0, $pos)).$url;
-			}
-			else if(strpos($url, 'http://') !== 0) // URL relative
-			{
-				if(($pos = strrpos($this->derniere, '/')) != 0)
-					$url = substr($this->derniere, 0, $pos + 1).$url;
-			}
+			$url = $this->url($url);
 			curl_setopt($c, CURLOPT_URL, $url);
 			curl_setopt($c, CURLOPT_COOKIE, &$this->cookiesTasses); // Par référence, car entre deux redirections, ils doivent avoir été mis à jour; et on ne peut intervenir que sur cette variable.
 			if($champs !== null)
