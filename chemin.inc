@@ -245,6 +245,12 @@ class Chemin
 
 $cheminDepart = new Chemin($_SERVER['PHP_SELF']);
 
+/*
+$racine = new Chemin('http://www.apple.com/');
+$chem = new Chemin('../../toto/titi/ghup', $racine);
+$bidule = new Chemin('../../toto/miarps/zip', $racine);
+echo $bidule->cheminDepuis($chem)->cheminComplet()."\n";
+echo $chem->absolu()->cheminComplet()."\n";
 /*$chem = new Chemin('/Users/gui/tmp/');
 $chem = $chem->et('../chose/');
 print('/Users/gui/chose/'."\n");
