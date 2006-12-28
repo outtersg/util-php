@@ -186,6 +186,36 @@ class Chemin
 		return $r;
 	}
 	
+	/* Trouve le chemin relatif entre $autre et $this. */
+	function cheminDepuis($autre)
+	{
+		/* Tout le monde part du même point (si possible). */
+		
+		$autre = $autre->absolu();
+		$moi = $this->absolu();
+		if($moi->protocole)
+		{
+			if($autre->protocole && $autre->protocole != $moi->protocole)
+				return $moi; // On reste en absolu.
+		}
+		
+		/* On parcourt ce qu'il y a de commun. */
+		
+		for($i = 0, $n = count($autre->chemin); $i < $n && $autre->chemin[$i] == $moi->chemin[$i] && ($autre->chemin[$i] < 0 || $autre->chemin[$i + 1] == $moi->chemin[$i + 1]); $i += 2) {}
+		
+		/* On rabiboche le reste. */
+		
+		$r1 = new Chemin();
+		$r1->chemin = array_slice($autre->chemin, $i);
+		$r2 = new Chemin();
+		$r2->chemin = array_slice($moi->chemin, $i);
+		
+		$r = $r1->dossierInverse()->et($r2);
+		$r->fichier = $moi->fichier;
+		$r->depuis = $autre;
+		return $r;
+	}
+	
 	function cheminComplet()
 	{
 		return $this->cheminDossier().$this->fichier;
