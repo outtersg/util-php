@@ -191,6 +191,13 @@ class Chemin
 		return $this->cheminDossier().$this->fichier;
 	}
 	
+	/* Renvoie (si possible) le chemin absolu de celui-ci, en allant chercher
+	 * dans $this->depuis. */
+	function absolu()
+	{
+		return $this->protocole || !$this->depuis ? $this : $this->depuis->absolu()->et($this);
+	}
+	
 	/*- Manipulations --------------------------------------------------------*/
 	
 	function creerDossier($mode)
