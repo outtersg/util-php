@@ -243,7 +243,7 @@ class Chemin
 	}
 }
 
-$cheminDepart = new Chemin($_SERVER['PHP_SELF']);
+$cheminDepart = new Chemin($_SERVER['SCRIPT_NAME']);
 
 /*
 $racine = new Chemin('http://www.apple.com/');
