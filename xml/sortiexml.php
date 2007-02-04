@@ -127,6 +127,14 @@ class SortieXml
 	{
 		
 	}
+	
+	function ecrire($ceci)
+	{
+		if($this->sortie)
+			fwrite($this->sortie, $ceci);
+		else
+			echo $ceci;
+	}
 }
 
 ?>
