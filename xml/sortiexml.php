@@ -51,7 +51,7 @@ class SortieXml
 		$this->niveauAplati = -1;
 		$this->alineaTheorique = "\n";
 		$this->alinea = &$this->alineaTheorique;
-		fwrite($this->sortie, '<?xml version="1.0"?>');
+		$this->ecrire('<?xml version="1.0"?>');
 	}
 	
 	function element($element, $contenu)
@@ -65,14 +65,14 @@ class SortieXml
 	{
 		if($this->dedans) // Il nous reste à fermer la balise ouvrante de l'élément père.
 		{
-			fwrite($this->sortie, '>');
+			$this->ecrire('>');
 			$this->alineaTheorique .= '	'; // Une tabulation de plus.
 			if($this->contenu !== null)
-				fwrite($this->sortie, $this->alinea.htmlspecialchars($this->contenu, ENT_NOQUOTES));
+				$this->ecrire($this->alinea.htmlspecialchars($this->contenu, ENT_NOQUOTES));
 			$this->dedans = false;
 		}
 		
-		fwrite($this->sortie, $this->alinea.'<'.$element);
+		$this->ecrire($this->alinea.'<'.$element);
 		$this->contenu = null;
 		$this->dedans = true;
 		$this->courants[] = $element;
@@ -91,7 +91,7 @@ class SortieXml
 	function attribut($attribut, $valeur)
 	{
 		if($this->dedans)
-			fwrite($this->sortie, ' '.$attribut.'="'.$valeur.'"');
+			$this->ecrire(' '.$attribut.'="'.$valeur.'"');
 	}
 	
 	function contenu($contenu)
@@ -102,7 +102,7 @@ class SortieXml
 			else $this->contenu = $contenu;
 		}
 		else
-			fwrite($this->sortie, htmlspecialchars($contenu, ENT_NOQUOTES));
+			$this->ecrire(htmlspecialchars($contenu, ENT_NOQUOTES));
 	}
 	
 	function sortir()
@@ -110,12 +110,12 @@ class SortieXml
 		if($this->dedans === false)
 		{
 			$this->alineaTheorique = substr($this->alineaTheorique, 0, -1);
-			fwrite($this->sortie, $this->alinea.'</'.$this->courants[count($this->courants) - 1].'>');
+			$this->ecrire($this->alinea.'</'.$this->courants[count($this->courants) - 1].'>');
 		}
 		else if($this->contenu !== null)
-			fwrite($this->sortie, '>'.htmlspecialchars($this->contenu, ENT_NOQUOTES).'</'.$this->courants[count($this->courants) - 1].'>');
+			$this->ecrire('>'.htmlspecialchars($this->contenu, ENT_NOQUOTES).'</'.$this->courants[count($this->courants) - 1].'>');
 		else
-			fwrite($this->sortie, '/>');
+			$this->ecrire('/>');
 		$this->dedans = false;
 		if($this->niveauAplati >= 0)
 			if(--$this->niveauAplati < 0)
