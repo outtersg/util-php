@@ -52,7 +52,7 @@ function periode_affDate($date, $mode = 0)
 {
 	$total = null;
 	$sepDate = $mode == 0 ? ' ' : '/';
-	$mois = array('Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre');
+	$mois = array('hors du temps', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre');
 	if($date[0] >= 0 || $date[1] >= 0 || $date[2] >= 0)
 	{
 		$p = $mode == 2 ? 2 : 4; // Précision sur l'année. Bon, ça ne marche pas, il faudrait être plus tordu pour récupérer vraiment les deux derniers chiffres.
