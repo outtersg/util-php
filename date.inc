@@ -304,6 +304,21 @@ function obtenir_datation($secondes)
 	return array($t['year'], $t['mon'], $t['mday'], $t['hours'], $t['minutes'], $t['seconds']);
 }
 
+/* Transforme les 32 janvier en 1er février, etc. */
+function corriger_datation($chose)
+{
+	/* calculer_datation remplaçant nos indéfinis, il faudra les remettre en
+	 * place à posteriori. */
+	$indefinis = array();
+	foreach($chose as $i => $n)
+		if($n < 0)
+			$indefinis[] = $i;
+	$r = obtenir_datation(calculer_datation($chose));
+	foreach($indefinis as $i)
+		$r[$i] = -1;
+	return $r;
+}
+
 /* Renvoie un nombre inférieur, égal ou supérieur à 0 selon que le premier
  * paramètre est gnagnagna, gnagnagna ou gnagnagna blabla. Ne fonctionne pas
  * forcément si vous laissez trop de trous dans vos dates. */
