@@ -89,6 +89,7 @@ function params_combiner($tableau1, $tableau2)
 		else
 			$tableau1[$cle] = $valeur;
 	}
+	return $tableau1;
 }
 
 function params_purgerReçusRécursivement(&$params)
