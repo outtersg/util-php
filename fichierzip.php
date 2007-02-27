@@ -45,6 +45,18 @@ class FichierZip
 	 * main), si je lui passe des blocs de 4K il prend le bloc et lui met le
 	 * marqueur, mais si je passe des blocs de 64K, il passe le bloc tel quel en
 	 * lui collant après coup un bloc vide avec le marqueur. */
+	/* Variables relatives au fichier en cours d'inclusion. */
+	protected $nomFichierDansArchive;
+	protected $controle;
+	protected $taille;
+	protected $tailleCompr;
+	
+	function ajouterContenu($nomFichierDansArchive, $contenu)
+	{
+		print($this->enTeteFichier($nomFichierDansArchive));
+		$this->ajouterBloc($contenu);
+		print($this->clotureFichier());
+	}
 	
 	function ajouterFichier($nomFichierDansArchive, $cheminFichier)
 	{
@@ -56,35 +68,27 @@ class FichierZip
 		
 		/* Contenu */
 		
-		$taille = 0;
-		$controle = 0;
-		if($this->methode) $tailleCompr = 0;
 		while(!feof($f))
-		{
-			$octets = fread($f, 0x8000); // On ne va pas y aller à la petite cuillère.
-			$tailleBloc = strlen($octets);
-			$taille += $tailleBloc;
-			$controle = crc32_continu($octets, $controle);
-			if($this->methode)
-			{
-				$tailleCompr += $tailleBloc + 5;
-				print(pack('cvv', 0, $tailleBloc, -1 - $tailleBloc));
-			}
-			print($octets);
-		}
-		if($this->methode)
-		{
-			print(pack('cvv', 1, 0, -1)); // Un bloc vide pour terminer
-			$tailleCompr += 5;
-		}
+			$this->ajouterBloc(fread($f, 0x8000)); // On ne va pas y aller à la petite cuillère.
 		
 		/* Résumé */
 		
-		if(!$this->methode) $tailleCompr = $taille;
-		print(pack('NVVV', 0x504b0708, $controle, $tailleCompr, $taille));
-		$this->infos[] = array($controle, $tailleCompr, $taille, 0, $nomFichierDansArchive); // On aura besoin de ressortir les infos sur le fichier à la fin.
+		print($this->clotureFichier());
 		
 		fclose($f);
+	}
+	
+	function ajouterBloc($octets)
+	{
+		$tailleBloc = strlen($octets);
+		$this->taille += $tailleBloc;
+		$this->controle = crc32_continu($octets, $this->controle);
+		if($this->methode)
+		{
+			$this->tailleCompr += $tailleBloc + 5;
+			print(pack('cvv', 0, $tailleBloc, -1 - $tailleBloc));
+		}
+		print($octets);
 	}
 	
 	function clore()
@@ -140,8 +144,33 @@ class FichierZip
 		? pack('vvvVV', 0, 0, 0, 0, $infos[3]) // file comment length, disk number start, internal file attributes, external file attributes, relative offset of local header 
 		: '').
 			$nomFichier; // file name, extra field (vide), file comment (vide)
+		$this->controle = 0;
+		$this->taille = 0;
+		$this->tailleCompr = 0;
+		$this->nomFichierDansArchive = $nomFichier;
 		return $r;
  	}
+	
+	/* Génère le bloc de fin de fichier, et mémorise le nécessaire pour la
+	 * clôture d'archive. */
+	function clotureFichier()
+	{
+		$r = '';
+		
+		if($this->methode)
+		{
+			$r .= pack('cvv', 1, 0, -1); // Un bloc vide pour terminer
+			$this->tailleCompr += 5;
+		}
+		
+		/* Résumé */
+		
+		if(!$this->methode) $this->tailleCompr = $this->taille;
+		$r .= pack('NVVV', 0x504b0708, $this->controle, $this->tailleCompr, $this->taille);
+		$this->infos[] = array($this->controle, $this->tailleCompr, $this->taille, 0, $this->nomFichierDansArchive); // On aura besoin de ressortir les infos sur le fichier à la fin.
+		
+		return $r;
+	}
 }
 
 ?>
