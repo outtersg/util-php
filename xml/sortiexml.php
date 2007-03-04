@@ -45,9 +45,15 @@ class SortieXml
 	
 	/*- Écriture -------------------------------------------------------------*/
 	
+	function commencerDans(&$chaine)
+	{
+		unset($this->sortie);
+		$this->sortie = &$chaine;
+		$this->commencer(null);
+	}
 	function commencer($sortie)
 	{
-		$this->sortie = $sortie;
+		if($sortie) $this->sortie = $sortie;
 		$this->niveauAplati = -1;
 		$this->alineaTheorique = "\n";
 		$this->alinea = &$this->alineaTheorique;
@@ -125,12 +131,14 @@ class SortieXml
 	
 	function terminer()
 	{
-		
+		unset($this->sortie);
 	}
 	
 	function ecrire($ceci)
 	{
-		if($this->sortie)
+		if(is_string($this->sortie))
+			$this->sortie .= $ceci;
+		else if($this->sortie)
 			fwrite($this->sortie, $ceci);
 		else
 			echo $ceci;
