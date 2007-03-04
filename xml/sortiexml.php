@@ -60,7 +60,7 @@ class SortieXml
 		$this->ecrire('<?xml version="1.0"?>');
 	}
 	
-	function element($element, $contenu)
+	function element($element, $contenu = null)
 	{
 		$this->entrer($element);
 		$this->contenu($contenu);
