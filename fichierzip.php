@@ -80,7 +80,7 @@ class FichierZip
 	
 	function ajouterBloc($octets)
 	{
-		$tailleBloc = strlen($octets);
+		if(!($tailleBloc = strlen($octets))) return;
 		$this->taille += $tailleBloc;
 		$this->controle = crc32_continu($octets, $this->controle);
 		if($this->methode)
