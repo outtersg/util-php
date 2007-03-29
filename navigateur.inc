@@ -51,7 +51,7 @@ class Navigateur
 				$pos = strpos($this->derniere, '/', strpos($this->derniere, '://') + 3);
 				return ($pos === false ? $this->derniere : substr($this->derniere, 0, $pos)).$url;
 			}
-			else if(strpos($url, 'http://') !== 0) // URL relative
+			else if(strpos($url, 'http://') !== 0 && strpos($url, 'https://') !== 0) // URL relative
 			{
 				if(($pos = strrpos($this->derniere, '/')) != 0)
 					return substr($this->derniere, 0, $pos + 1).$url;
@@ -96,6 +96,7 @@ class Navigateur
 			}
 			$GLOBALS['navigateur_recuperateurEnTetes'] = &$this;
 			curl_setopt($c, CURLOPT_HEADERFUNCTION, 'navigateur_recupEnTete');
+			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 			if($this->auth)
 			{
 				curl_setopt($c, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
