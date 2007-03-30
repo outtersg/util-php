@@ -21,6 +21,24 @@
  * SOFTWARE.
  */
 
+function  aff_tableau($tableau) { return Date::aff_tableau($tableau); }
+function  date_affichage_tableau($tableau) { return Date::date_affichage_tableau($tableau); }
+function  date_affichage($date) { return Date::date_affichage($date); }
+function  decouper_datation($date) { return Date::decouper_datation($date); }
+function  decouper_heure($date, $tenterAussiLaDate) { return Date::decouper_heure($date, $tenterAussiLaDate); }
+function  decouper_date($date) { return Date::decouper_date($date); }
+function  assembler_datation($tabDate, $tabHoraire) { return Date::assembler_datation($tabDate, $tabHoraire); }
+function  completer_datation($original, $avec) { return Date::completer_datation($original, $avec); }
+function  calculer_datation($chose) { return Date::calculer_datation($chose); }
+function  obtenir_datation($secondes) { return Date::obtenir_datation($secondes); }
+function  corriger_datation($chose) { return Date::corriger_datation($chose); }
+function  comparer_datations($d0, $d1) { return Date::comparer_datations($d0, $d1); }
+function  tester_decoupage_datation() { return Date::tester_decoupage_datation(); }
+function  afficher_test_decoupage_datation($date) { return Date::afficher_test_decoupage_datation($date); }
+
+class Date
+{
+
 /*- Débogage -----------------------------------------------------------------*/
 
 function aff_tableau($tableau)
@@ -72,8 +90,8 @@ function date_affichage($date)
 
 /*- Découpage de dates et heures ---------------------------------------------*/
 
-$GLOBALS['g_nomChamps'] = array('heures', 'minutes', 'secondes');
-$GLOBALS['g_chiffres'] = '0123456789';
+static $g_nomChamps = array('heures', 'minutes', 'secondes');
+static $g_chiffres = '0123456789';
 
 function decouper_datation($date)
 {
@@ -95,7 +113,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 		/* Recherche du nombre */
 		
 		$debut = $fin;
-		while(--$debut >= 0 && false !== strpos($GLOBALS['g_chiffres'], $c = $date{$debut})) {}
+		while(--$debut >= 0 && false !== strpos(Date::$g_chiffres, $c = $date{$debut})) {}
 		$valeurs[] = ($debut + 1 < $fin ? intval(substr($date, $debut + 1, $fin)) : -1);
 		
 		/* Interprétation du séparateur */
@@ -147,7 +165,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 			}
 			else
 			{
-				//print('### le champ \''.$g_nomChamps[$suggestion[$debut]].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
+				//print('### le champ \''.Date::$g_nomChamps[$suggestion[$debut]].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
 				return null;
 			}
 	
@@ -159,7 +177,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 						$rangement[$j] = $debut;
 					else
 					{
-						//print('### le champ \''.$g_nomChamps[$j].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
+						//print('### le champ \''.Date::$g_nomChamps[$j].'\' apparaît plusieurs fois dans '.$date.'.<br/>');
 						return null;
 					}
 	
@@ -205,7 +223,7 @@ function decouper_date($date)
 	while($fin > 0)
 	{
 		$debut = $fin;
-		while(--$debut >= 0 && false !== strpos($GLOBALS['g_chiffres'], $c = $date{$debut})) {}
+		while(--$debut >= 0 && false !== strpos(Date::$g_chiffres, $c = $date{$debut})) {}
 		if($debut == $fin - 1)
 		{
 			//print('### double séparateur dans la date '.$date.'.<br/>');
@@ -365,6 +383,28 @@ function afficher_test_decoupage_datation($date)
 	}
 	else
 		print('(échec pour '.$date.')<br/>');
+}
+
+/*- Compatibilité ------------------------------------------------------------*/
+
+function mef($date)
+{
+	for($i = 6; --$i >= 0;)
+		if($date[$i] < 0)
+			$date[$i] = false;
+	return $date;
+}
+
+function fem($date)
+{
+	for($i = 6; --$i >= 0;)
+		if($date[$i] === false)
+			$date[$i] = -1;
+	return $date;
+}
+
+/*- Fin ----------------------------------------------------------------------*/
+
 }
 
 ?>
