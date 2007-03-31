@@ -31,7 +31,7 @@ function  assembler_datation($tabDate, $tabHoraire) { return Date::assembler_dat
 function  completer_datation($original, $avec) { return Date::fem(Date::completer(Date::mef($original), Date::mef($avec))); }
 function  calculer_datation($chose) { return Date::calculer(Date::mef($chose)); }
 function  obtenir_datation($secondes) { return Date::obtenir_datation($secondes); }
-function  corriger_datation($chose) { return Date::corriger_datation($chose); }
+function  corriger_datation($chose) { return Date::fem(Date::corriger(Date::mef($chose))); }
 function  comparer_datations($d0, $d1) { return Date::comparer_datations($d0, $d1); }
 function  tester_decoupage_datation() { return Date::tester_decoupage_datation(); }
 function  afficher_test_decoupage_datation($date) { return Date::afficher_test_decoupage_datation($date); }
@@ -321,17 +321,17 @@ function obtenir_datation($secondes)
 }
 
 /* Transforme les 32 janvier en 1er février, etc. */
-function corriger_datation($chose)
+function corriger($chose)
 {
 	/* calculer_datation remplaçant nos indéfinis, il faudra les remettre en
 	 * place à posteriori. */
 	$indefinis = array();
 	foreach($chose as $i => $n)
-		if($n < 0)
+		if($n === false)
 			$indefinis[] = $i;
-	$r = obtenir_datation(calculer_datation($chose));
+	$r = obtenir_datation(Date::calculer($chose));
 	foreach($indefinis as $i)
-		$r[$i] = -1;
+		$r[$i] = false;
 	return $r;
 }
 
