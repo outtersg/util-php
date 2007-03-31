@@ -92,3 +92,48 @@ function periode_union($periodes)
 	}
 	return $res;
 }
+
+class Periode
+{
+
+/* Calcule la durée d'une période. L'unité est le plus petit champ rempli à la
+ * fois dans $debut et $fin. Fonctionne en décrémentant, donc ça peut être
+ * long. $fin exclus. */
+function duree($debut, $fin, $numChampUnite = false)
+{
+	/* À FAIRE: une version qui sache utiliser des raccourcis, ex.: 3600 s dans
+	 * 1 h, 24 h dans un jour sauf au changement d'heure, etc. */
+	if($numChampUnite === false)
+	{
+		for($numChampUnite = 6; --$numChampUnite >= 0 && ($debut[$numChampUnite] === false || $fin[$numChampUnite] === false);) {}
+		if($numChampUnite < 0)
+			return false; // Rien à comparer!
+	}
+	$total = 0;
+	for($numChamp = 0; $numChamp <= $numChampUnite; ++$numChamp)
+		$total += Periode::descendreA($fin, $numChamp, $debut[$numChamp], $numChampUnite);
+	return $total;
+}
+
+/* Renvoie le nombre d'unités dont aura été décrémentée $date pour que son
+ * champs $numChamp ait baissé à $valeur. */
+function descendreA(&$date, $numChamp, $valeur, $numChampUnite)
+{
+	$mini = array(0, 1, 1, 0, 0, 0); // Seuil de chacun des éléments.
+	if($valeur == -1) $valeur = $mini[$numChamp] - 1;
+	if($numChamp == $numChampUnite)
+	{
+		$total = $date[$numChamp] - $valeur;
+		$date[$numChamp] = $valeur;
+	}
+	else
+	{
+		$total = 0;
+		for($i = $date[$numChamp]; --$i >= $valeur;) // C'est mécanique, quand on est juste un au-dessus de la valeur voulue, et qu'on fait passer le champ suivant en dessous de son seuil, on décrémente notre champ. On utilise donc ce critère pour s'arrêter, et non tout bêtement « le champ a atteint la valeur désirée », car si celle-ci est en dessous du seuil, elle ne sera jamais atteinte (du fait des corriger()).
+			$total += Periode::descendreA($date, $numChamp + 1, -1, $numChampUnite);
+	}
+	$date = Date::corriger($date);
+	return $total;
+}
+
+}
