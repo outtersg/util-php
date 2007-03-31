@@ -28,7 +28,7 @@ function  decouper_datation($date) { return Date::decouper_datation($date); }
 function  decouper_heure($date, $tenterAussiLaDate) { return Date::decouper_heure($date, $tenterAussiLaDate); }
 function  decouper_date($date) { return Date::decouper_date($date); }
 function  assembler_datation($tabDate, $tabHoraire) { return Date::assembler_datation($tabDate, $tabHoraire); }
-function  completer_datation($original, $avec) { return Date::completer_datation($original, $avec); }
+function  completer_datation($original, $avec) { return Date::fem(Date::completer(Date::mef($original), Date::mef($avec))); }
 function  calculer_datation($chose) { return Date::calculer_datation($chose); }
 function  obtenir_datation($secondes) { return Date::obtenir_datation($secondes); }
 function  corriger_datation($chose) { return Date::corriger_datation($chose); }
@@ -296,12 +296,12 @@ function assembler_datation($tabDate, $tabHoraire)
 
 /*- Calculs sur tableaux de dates --------------------------------------------*/
 
-function completer_datation($original, $avec)
+function completer($original, $avec)
 {
 	if($original == null) return $avec;
 	if($avec == null) return $original;
 	for($i = 6; --$i >= 0;)
-		if($avec[$i] >= 0)
+		if($avec[$i] !== false)
 			$original[$i] = $avec[$i];
 	return $original;
 }
