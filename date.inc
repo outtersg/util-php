@@ -29,7 +29,7 @@ function  decouper_heure($date, $tenterAussiLaDate) { return Date::decouper_heur
 function  decouper_date($date) { return Date::decouper_date($date); }
 function  assembler_datation($tabDate, $tabHoraire) { return Date::assembler_datation($tabDate, $tabHoraire); }
 function  completer_datation($original, $avec) { return Date::fem(Date::completer(Date::mef($original), Date::mef($avec))); }
-function  calculer_datation($chose) { return Date::calculer_datation($chose); }
+function  calculer_datation($chose) { return Date::calculer(Date::mef($chose)); }
 function  obtenir_datation($secondes) { return Date::obtenir_datation($secondes); }
 function  corriger_datation($chose) { return Date::corriger_datation($chose); }
 function  comparer_datations($d0, $d1) { return Date::comparer_datations($d0, $d1); }
@@ -306,11 +306,11 @@ function completer($original, $avec)
 	return $original;
 }
 
-function calculer_datation($chose)
+function calculer($chose)
 {
-	/* Un mktime avec des -1, ça ne va pas être terrible. */
-	if($chose == null || in_array(-1, $chose))
-		$chose = completer_datation(array(1970, 1, 1, 0, 0, 0), $chose);
+	/* Un mktime avec des false, ça ne va pas être terrible. */
+	if($chose == null || in_array(false, $chose))
+		$chose = Date::completer(array(1970, 1, 1, 0, 0, 0), $chose);
 	return mktime($chose[3], $chose[4], $chose[5], $chose[1], $chose[2], $chose[0] >= 0 ? $chose[0] : 0);
 }
 
