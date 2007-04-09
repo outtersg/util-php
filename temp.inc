@@ -31,4 +31,58 @@ function temp_nouveau($cheminDossier, $suffixe)
 	return $numero;
 }
 
+class Remplacant
+{
+	/* Renvoie un objet Temp, dont les membres sont les fichiers préouverts
+	 * pour: l: le chemin demandé, et e: le fichier appelé à le remplacer.
+	 * Renvoie false si le verrou n'a pas pu être obtenu (un autre programme
+	 * est passé par là, et n'a pas relâché). */
+	function &Verrouille($chemin)
+	{
+		$r = new Remplacant();
+		if(class_exists('Chemin'))
+		{
+			$r->chemin = new Chemin(getcwd().'/'); // Il nous faut une référence stable pour si on change de répertoire courant.
+			$r->chemin = $r->chemin->et($chemin)->absolu()->cheminComplet();
+		}
+		else
+			$r->chemin = $chemin;
+		register_shutdown_function(array(&$r, 'annuler'));
+		for($n = 10; !($r->e = @fopen($r->chemin.'.verrou', 'x+')) && --$n > 0;)
+			usleep(1000);
+		if(!$r->e) return false;
+		$r->l = fopen($r->chemin, 'r');
+		return $r;
+	}
+	
+	/* Termine la transaction demandée dans Verrouille(), en effectuant le
+	 * remplacement. Si demandé, sauvegarde l'ancien fichier sous un nom avec
+	 * suffixe numérique. */
+	function remplacer($sauvegarde = false)
+	{
+		if($sauvegarde)
+		{
+			for($n = 0; ++$n < 0x1000 && !($sauvegarde = @fopen($this->chemin.'.'.$n, 'x+'));) {}
+			if($sauvegarde) // Sinon tant pis, plus de place.
+			{
+				fclose($sauvegarde);
+				copy($this->chemin, $this->chemin.'.'.$n);
+			}
+		}
+		fclose($this->l);
+		fclose($this->e);
+		if(@rename($this->chemin.'.verrou', $this->chemin))
+			return true;
+		@unlink($this->chemin.'.verrou');
+		return false;
+	}
+	
+	function annuler()
+	{
+		@fclose($this->l);
+		@fclose($this->e);
+		@unlink($this->chemin.'.verrou');
+	}
+}
+
 ?>
