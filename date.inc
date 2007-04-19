@@ -357,6 +357,17 @@ function comparer($d0, $d1)
 	return 0;
 }
 
+function moins($date, $moins)
+{
+	foreach($date as $i => $e)
+		if($e !== false && array_key_exists($i, $moins) && $moins[$i] !== false)
+		{
+			$date[$i] -= $moins[$i];
+			$date = Date::corriger($date);
+		}
+	return $date;
+}
+
 /*- Tests --------------------------------------------------------------------*/
 
 function tester_decoupage_datation()
