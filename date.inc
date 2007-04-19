@@ -32,7 +32,7 @@ function  completer_datation($original, $avec) { return Date::fem(Date::complete
 function  calculer_datation($chose) { return Date::calculer(Date::mef($chose)); }
 function  obtenir_datation($secondes) { return Date::obtenir_datation($secondes); }
 function  corriger_datation($chose) { return Date::fem(Date::corriger(Date::mef($chose))); }
-function  comparer_datations($d0, $d1) { return Date::comparer_datations($d0, $d1); }
+function  comparer_datations($d0, $d1) { return Date::comparer(Date::mef($d0), Date::mef($d1)); }
 function  tester_decoupage_datation() { return Date::tester_decoupage_datation(); }
 function  afficher_test_decoupage_datation($date) { return Date::afficher_test_decoupage_datation($date); }
 
@@ -338,7 +338,7 @@ function corriger($chose)
 /* Renvoie un nombre inférieur, égal ou supérieur à 0 selon que le premier
  * paramètre est gnagnagna, gnagnagna ou gnagnagna blabla. Ne fonctionne pas
  * forcément si vous laissez trop de trous dans vos dates. */
-function comparer_datations($d0, $d1)
+function comparer($d0, $d1)
 {
 	if($d0 === null)
 		if($d1 === null)
@@ -349,7 +349,7 @@ function comparer_datations($d0, $d1)
 		return 2;
 	for($i = 0; $i < 6; ++$i)
 	{
-		if(($d0[$i] < 0 && $d1[$i] >= 0) || ($d1[$i] < 0 && $d0[$i] >= 0))
+		if(($d0[$i] === false && $d1[$i] !== false) || ($d1[$i] === false && $d0[$i] !== false))
 			return 0; // Vous êtes incomparables, toutes les deux.
 		if($d0[$i] < $d1[$i]) return -1;
 		if($d0[$i] > $d1[$i]) return 1;
