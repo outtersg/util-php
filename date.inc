@@ -24,10 +24,10 @@
 function  aff_tableau($tableau) { return Date::aff_tableau($tableau); }
 function  date_affichage_tableau($tableau) { return Date::date_affichage_tableau($tableau); }
 function  date_affichage($date) { return Date::date_affichage($date); }
-function  decouper_datation($date) { return Date::decouper_datation($date); }
-function  decouper_heure($date, $tenterAussiLaDate) { return Date::decouper_heure($date, $tenterAussiLaDate); }
-function  decouper_date($date) { return Date::decouper_date($date); }
-function  assembler_datation($tabDate, $tabHoraire) { return Date::assembler_datation($tabDate, $tabHoraire); }
+function  decouper_datation($date) { return Date::fem(Date::lire($date)); }
+function  decouper_heure($date, $tenterAussiLaDate) { return Date::fem(Date::lireHeure($date, $tenterAussiLaDate)); }
+function  decouper_date($date) { return Date::fem(Date::lireJour($date)); }
+function  assembler_datation($tabDate, $tabHoraire) { return Date::fem(Date::assembler(Date::mef($tabDate), Date::mef($tabHoraire))); }
 function  completer_datation($original, $avec) { return Date::fem(Date::completer(Date::mef($original), Date::mef($avec))); }
 function  calculer_datation($chose) { return Date::calculer(Date::mef($chose)); }
 function  obtenir_datation($secondes) { return Date::obtenir_datation($secondes); }
@@ -93,12 +93,12 @@ function date_affichage($date)
 static $g_nomChamps = array('heures', 'minutes', 'secondes');
 static $g_chiffres = '0123456789';
 
-function decouper_datation($date)
+function lire($date)
 {
-	return decouper_heure($date, true);
+	return Date::lireHeure($date, true);
 }
 
-function decouper_heure($date, $tenterAussiLaDate)
+function lireHeure($date, $tenterAussiLaDate)
 {
 	$retour = array();
 	$fin = strlen($date);
@@ -114,7 +114,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 		
 		$debut = $fin;
 		while(--$debut >= 0 && false !== strpos(Date::$g_chiffres, $c = $date{$debut})) {}
-		$valeurs[] = ($debut + 1 < $fin ? intval(substr($date, $debut + 1, $fin)) : -1);
+		$valeurs[] = ($debut + 1 < $fin ? intval(substr($date, $debut + 1, $fin)) : false);
 		
 		/* Interprétation du séparateur */
 		
@@ -137,7 +137,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 		else if($c != ':')
 		{
 			if($tenterAussiLaDate)
-				return assembler_datation(decouper_date($date), array(-1, -1, -1));
+				return Date::assembler(Date::lireJour($date), array(false, false, false));
 			//print('### délimiteur horaire non reconnu: \''.$c.'\' dans '.$date.'.<br/>');
 			return null;
 		}
@@ -157,7 +157,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 	$rangement = array(-1, -1, -1); // Indice dans $valeurs du machin qui doit aller dans la case correspondante; plus tard on y mettra la valeur elle-même, mais à chaque jour suffit sa peine.
 	
 	for($debut = count($valeurs); --$debut >= 0;) // Première passe: les champs dont on est sûr de la destination (le $suggestion correspondant a une valeur positive).
-		if($valeurs[$debut] >= 0 && $suggestion[$debut] >= 0)
+		if($valeurs[$debut] !== false && $suggestion[$debut] >= 0)
 			if($rangement[$suggestion[$debut]] < 0)
 			{
 				$rangement[$suggestion[$debut]] = $debut;
@@ -172,7 +172,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 	for($j = count($rangement); --$j >= 0;) // Deuxième passe: les suggestions un peu moins fiables sont utilisées pour remplir les trous
 		if($rangement[$j] < 0) // Pas trouvé à la première passe.
 			for($debut = count($valeurs); --$debut >= 0;)
-				if($valeurs[$debut] >= 0 && $suggestion2[$debut] == $j)
+				if($valeurs[$debut] !== false && $suggestion2[$debut] == $j)
 					if($rangement[$j] < 0)
 						$rangement[$j] = $debut;
 					else
@@ -184,7 +184,7 @@ function decouper_heure($date, $tenterAussiLaDate)
 	for($j = 0, $debut = count($valeurs); $j < count($rangement); ++$j) // Dernière passe: remplissage avec ce qui reste, dans l'ordre commun: heure-minute-seconde.
 		if($rangement[$j] < 0) // Un truc restant à remplir.
 		{
-			while(--$debut >= 0 && ($valeurs[$debut] < 0 || $suggestion[$debut] >= 0 || $suggestion2[$debut] >= 0)) {} // Tant qu'on a des valeurs, invalides ou déjà exploitées, on remonte.
+			while(--$debut >= 0 && ($valeurs[$debut] === false || $suggestion[$debut] >= 0 || $suggestion2[$debut] >= 0)) {} // Tant qu'on a des valeurs, invalides ou déjà exploitées, on remonte.
 			if($debut < 0) break;
 			$rangement[$j] = $valeurs[$debut]; // On stocke directement la valeur.
 		}
@@ -194,12 +194,12 @@ function decouper_heure($date, $tenterAussiLaDate)
 	if($j < 2) // Un seul nombre ne nous suffit pas à l'accepter en tant qu'heure seule.
 	{
 		for($j = count($valeurs); --$j >= 0;)
-			if($valeurs[$j] >= 0)
+			if($valeurs[$j] !== false)
 				break;
 		if($suggestion[$j] < 0) // Bon, si on a trouvé un marquage fort, on continue en considérant qu'il s'agit d'une heure.
 		{
 			if($tenterAussiLaDate)
-				return assembler_datation(decouper_date($date), array(-1, -1, -1));
+				return Date::assembler(Date::lireJour($date), array(false, false, false));
 			//print('### heure incomplète dans '.$date.' (il faut au moins les heures et minutes).<br/>');
 			return null;
 		}
@@ -207,12 +207,12 @@ function decouper_heure($date, $tenterAussiLaDate)
 	
 	/* Interprétation de la date */
 	
-	return ($tenterAussiLaDate ? assembler_datation($fin > 0 ? decouper_date(substr($date, 0, $fin)) : array(-1, -1, -1), $rangement) : $rangement);
+	return ($tenterAussiLaDate ? Date::assembler($fin > 0 ? Date::lireJour(substr($date, 0, $fin)) : array(false, false, false), $rangement) : $rangement);
 }
 
-function decouper_date($date)
+function lireJour($date)
 {
-	if(strlen($date) == 0) return array(-1, -1, -1);
+	if(strlen($date) == 0) return array(false, false, false);
 	
 	/* Stockage des valeurs */
 	
@@ -273,19 +273,19 @@ function decouper_date($date)
 	/* Recherche de l'année (quatre chiffres); On décale en conséquence. */
 	
 	if($fin > 0 && $longueurs[0] == 4) // La date contient une année; elle reste en première position.
-		while($fin < 3) { $valeurs[] = -1; ++$fin; }
-	else // Pas trouvé d'année, on complète par des -1 (ce qui nous donne: 1 élément: jour; 2: jour et mois, 3: ben tout).
+		while($fin < 3) { $valeurs[] = false; ++$fin; }
+	else // Pas trouvé d'année, on complète par des false (ce qui nous donne: 1 élément: jour; 2: jour et mois, 3: ben tout).
 	{
 		for($debut = 3; --$fin >= 0;)
 			$valeurs[--$debut] = $valeurs[$fin];
 		while(--$debut >= 0)
-			$valeurs[$debut] = -1;
+			$valeurs[$debut] = false;
 	}
 	
 	return $valeurs;
 }
 
-function assembler_datation($tabDate, $tabHoraire)
+function assembler($tabDate, $tabHoraire)
 {
 	if($tabDate == null || $tabHoraire == null) return null;
 	for($i = 0; $i < count($tabHoraire); ++$i)
