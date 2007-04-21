@@ -53,9 +53,9 @@ class FichierZip
 	
 	function ajouterContenu($nomFichierDansArchive, $contenu)
 	{
-		print($this->enTeteFichier($nomFichierDansArchive));
+		$this->enTeteFichier($nomFichierDansArchive);
 		$this->ajouterBloc($contenu);
-		print($this->clotureFichier());
+		$this->clotureFichier();
 	}
 	
 	function ajouterFichier($nomFichierDansArchive, $cheminFichier)
@@ -64,7 +64,7 @@ class FichierZip
 		
 		/* En-tête */
 		
-		print($this->enTeteFichier($nomFichierDansArchive));
+		$this->enTeteFichier($nomFichierDansArchive);
 		
 		/* Contenu */
 		
@@ -73,7 +73,7 @@ class FichierZip
 		
 		/* Résumé */
 		
-		print($this->clotureFichier());
+		$this->clotureFichier();
 		
 		fclose($f);
 	}
@@ -100,7 +100,7 @@ class FichierZip
 		foreach($this->infos as $infos)
 		{
 			$infos[3] = $positionCourante;
-			print($this->enTeteFichier($infos[4], $infos));
+			$this->enTeteFichier($infos[4], $infos);
 			$positionCourante += 0x1e + strlen($infos[4]) + $infos[1] + 0x10; // Place prise par le fichier dans l'archive
 			$tailleTdM += 0x2e + strlen($infos[4]); // Taille prise par cette entrée dans la table des matières
 		}
@@ -148,7 +148,7 @@ class FichierZip
 		$this->taille = 0;
 		$this->tailleCompr = 0;
 		$this->nomFichierDansArchive = $nomFichier;
-		return $r;
+		echo $r;
  	}
 	
 	/* Génère le bloc de fin de fichier, et mémorise le nécessaire pour la
@@ -169,7 +169,7 @@ class FichierZip
 		$r .= pack('NVVV', 0x504b0708, $this->controle, $this->tailleCompr, $this->taille);
 		$this->infos[] = array($this->controle, $this->tailleCompr, $this->taille, 0, $this->nomFichierDansArchive); // On aura besoin de ressortir les infos sur le fichier à la fin.
 		
-		return $r;
+		echo $r;
 	}
 }
 
