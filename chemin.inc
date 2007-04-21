@@ -230,7 +230,7 @@ class Chemin
 	
 	/*- Manipulations --------------------------------------------------------*/
 	
-	function creerDossier($mode)
+	function creerDossier($mode = false)
 	{
 		if(!$mode) $mode = 0700;
 		for($taille = count($this->chemin), $i = $taille; $i > 0; $i -= 2)
