@@ -51,7 +51,7 @@ class Remplacant
 		for($n = 10; !($r->e = @fopen($r->chemin.'.verrou', 'x+')) && --$n > 0;)
 			usleep(1000);
 		if(!$r->e) return false;
-		$r->l = fopen($r->chemin, 'r');
+		$r->l = @fopen($r->chemin, 'r');
 		return $r;
 	}
 	
