@@ -58,7 +58,9 @@ class Chargeur
 				return false;
 		
 		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, &$traiteurRacine);
-		$interprete = xml_parser_create();
+		$interprete = isset($this->encodageDeLecture) ? xml_parser_create($this->encodageDeLecture) : xml_parser_create();
+		if(isset($this->encodageDeRestitution))
+			xml_parser_set_option($interprete, XML_OPTION_TARGET_ENCODING, "UTF-8");
 		xml_parser_set_option($interprete, XML_OPTION_CASE_FOLDING, FALSE);
 		xml_set_object($interprete, &$this);
 		xml_set_element_handler($interprete, 'entrer', 'sortir');
