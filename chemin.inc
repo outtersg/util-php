@@ -165,7 +165,7 @@ class Chemin
 		
 		for($i = 0; $i < $n; $i += 2)
 			$r .= ($this->chemin[$i] == 1 ? $this->chemin[$i+1] : '..').'/';
-		return $r;
+		return $r ? $r : './';
 	}
 	
 	function cheminDossier()
