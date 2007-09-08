@@ -47,11 +47,12 @@ class Chemin
 	/* Constructeur. Le paramètre 'depuis' doit être renseigné si le répertoire
 	 * de départ est différent du répertoire courant (d'exécution du script). Il
 	 * permet l'exploration correcte du système de fichier autour du chemin. */
-	function Chemin($acces = null, $depuis = null)
+	function Chemin($acces = null, $depuis = null, $dansServeurDepuis = false)
 	{
 		$this->chemin = array();
 		$this->fichier = null;
 		$this->depuis = ($depuis === null ? $GLOBALS['cheminDepart'] : $depuis); // Tant qu'on ne nous dit pas le contraire
+		$this->absoluRelatifAuProtocole = $dansServeurDepuis;
 		
 		if($acces)
 			$this->decouper($acces);
@@ -62,6 +63,9 @@ class Chemin
 		$r = clone $this;
 		if(is_a($chemin, Chemin))
 		{
+			if($chemin->absoluRelatifAuProtocole && $chemin->protocole === '/' && $r->protocole !== null && $r->protocole !== '/') // Un protocole façon URL passe devant un chemin absolu.
+				$r->chemin = array_slice($r->chemin, 0, 2);
+			else
 			if($chemin->protocole !== null) // Si l'ajout est une adresse absolue, il se fiche de ce qu'on peut lui placer devant (par exemple $this).
 				return clone $chemin;
 			for($n = count($chemin->chemin), $i = 0; $i < $n; $i += 2)
@@ -225,7 +229,7 @@ class Chemin
 	 * dans $this->depuis. */
 	function absolu()
 	{
-		return $this->protocole || !$this->depuis ? $this : $this->depuis->absolu()->et($this);
+		return ($this->protocole && !($this->absoluRelatifAuProtocole && $this->protocole == '/')) || !$this->depuis ? $this : $this->depuis->absolu()->et($this);
 	}
 	
 	/*- Manipulations --------------------------------------------------------*/
