@@ -44,20 +44,23 @@ function periode_aff($entre, $et, $mode = 0)
 		else
 			break;
 	if($i >= 6) return $aff; // Les deux dates sont strictement les mêmes.
-	$aff = periode_affDate($entre2, $mode).' - '.$aff;
+	$aff = ($mode == Periode::$REDIGE ? 'de ' : '').periode_affDate($entre2, $mode).($mode == Periode::$REDIGE ? ' à ' : ' - ').$aff;
+	if($mode == Periode::$REDIGE)
+		$aff = strtr($aff, array('de le' => 'du', 'à le' => 'au'));
 	return $aff;
 }
 
 function periode_affDate($date, $mode = 0)
 {
 	$total = null;
-	$sepDate = $mode == 0 ? ' ' : '/';
+	$lettres = in_array($mode, array(Periode::$ECRIT, Periode::$REDIGE));
+	$sepDate = $lettres ? ' ' : '/';
 	$mois = array('hors du temps', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre');
 	if($date[0] >= 0 || $date[1] >= 0 || $date[2] >= 0)
 	{
 		$p = $mode == 2 ? 2 : 4; // Précision sur l'année. Bon, ça ne marche pas, il faudrait être plus tordu pour récupérer vraiment les deux derniers chiffres.
 		if($date[0] >= 0) $total = sprintf("%0{$p}.{$p}d", $date[0]);
-		if($mode == 0)
+		if($lettres)
 		{
 			if($date[1] >= 0) $total = sprintf('%s%s', $mois[$date[1]], $total === null ? '' : $sepDate).$total;
 			if($date[2] >= 0) $total = sprintf('%d%s', $date[2], $total === null ? '' : $sepDate).$total;
@@ -70,6 +73,8 @@ function periode_affDate($date, $mode = 0)
 	}
 	/* À FAIRE: heures, minutes, secondes */
 	
+	if($mode == Periode::$REDIGE && $date[2] !== null)
+		$total = 'le '.$total;
 	return $total;
 }
 
@@ -95,6 +100,10 @@ function periode_union($periodes)
 
 class Periode
 {
+	static public $ECRIT = 0;
+	static public $NUMERIQUE = 1;
+	static public $COURT = 2;
+	static public $REDIGE = 3;
 
 /* Calcule la durée d'une période. L'unité est le plus petit champ rempli à la
  * fois dans $debut et $fin. Fonctionne en décrémentant, donc ça peut être
