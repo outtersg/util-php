@@ -39,7 +39,7 @@ function periode_aff($entre, $et, $mode = 0)
 	$entre2 = $entre;
 	$aff = periode_affDate($et, $mode);
 	for($i = 0; $i < 6; ++$i)
-		if($entre2[$i] == $et[$i])
+		if($entre2[$i] == $et[$i] || $entre2[$i] == -1)
 			$entre2[$i] = -1;
 		else
 			break;
