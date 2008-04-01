@@ -306,6 +306,19 @@ function completer($original, $avec)
 	return $original;
 }
 
+/* Enlève de $date les éléments déjà présents dans $reference. */
+function decompleter($date, $reference)
+{
+	if(!$date || !$reference)
+		return $date;
+	for($i = -1; ++$i < 6;)
+		if($reference[$i] === $date[$i])
+			$date[$i] = false;
+		else
+			break;
+	return $date;
+}
+
 function calculer($chose)
 {
 	/* Un mktime avec des false, ça ne va pas être terrible. */
