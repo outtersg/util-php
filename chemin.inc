@@ -222,7 +222,8 @@ class Chemin
 	
 	function cheminComplet()
 	{
-		return $this->cheminDossier().$this->fichier;
+		$d = $this->cheminDossier();
+		return $this->fichier && $d == './' ? $this->fichier : $d.$this->fichier;
 	}
 	
 	/* Renvoie (si possible) le chemin absolu de celui-ci, en allant chercher
