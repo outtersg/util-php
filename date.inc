@@ -314,7 +314,8 @@ function calculer($chose)
 	return mktime($chose[3], $chose[4], $chose[5], $chose[1], $chose[2], $chose[0] >= 0 ? $chose[0] : 0);
 }
 
-function obtenir_datation($secondes)
+function obtenir_datation($secondes) { return Date::obtenir($secondes); }
+function obtenir($secondes)
 {
 	$t = getdate($secondes);
 	return array($t['year'], $t['mon'], $t['mday'], $t['hours'], $t['minutes'], $t['seconds']);
