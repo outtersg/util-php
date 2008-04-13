@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2005 Guillaume Outters
+ * Copyright (c) 2005,2008 Guillaume Outters
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
