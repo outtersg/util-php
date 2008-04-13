@@ -180,10 +180,12 @@ class Periode
 				$blocs[] = join(' ', $b2);
 			}
 		foreach($blocs as $n => $b)
-			$blocs[$n] = strtr($b, array('_' => (count($blocs) == 1 ? '' : ($mode == Periode::$REDIGE ? $n ? 'à' : 'de' : '-'))));
+			$blocs[$n] = strtr($b, array('_' => (count($blocs) == 1 ? '' : ($mode == Periode::$REDIGE ? ($n ? 'à' : 'de') : ($n ? '-' : '')))));
 		$aff = implode(' ', $blocs);
 		if($mode == Periode::$REDIGE)
 			$aff = strtr($aff, array('  ' => ' ', 'de le' => 'du', 'à à' => 'à', 'à le' => 'au', 'de à' => 'de'));
+		else
+			$aff = strtr($aff, array('- -' => '-', '  ' => ' '));
 		if($aff{0} == ' ')
 			$aff = substr($aff, 1);
 		return $aff;
