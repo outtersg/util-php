@@ -194,6 +194,25 @@ class Periode
 		return periode_affDate(Date::fem($d), $mode);
 	}
 	
+	function testsAff()
+	{
+		$tests = array
+		(
+			'10/10 08 h 30', '16/10 16:20',
+			'31/12/2007 22 h 30', '1/1/2008 4 h',
+			'20/3/2008 19:30', '21 0 h',
+			'11/3/2008', '8/4/2008',
+			'13/04/2008 21:26', '13/04/2008 21:26',
+			'13/04/2008 21:27', '21:27',
+		);
+		for($i = count($tests); ($i -= 2) >= 0;)
+		{
+			$a = Date::lire($tests[$i]);
+			$b = Date::lire($tests[$i + 1]);
+			echo Date::aff_tableau($a).Date::aff_tableau($b).' -> '.Periode::aff($a, $b, Periode::$REDIGE)."\n";
+		}
+	}
+	
 /* Calcule la durée d'une période. L'unité est le plus petit champ rempli à la
  * fois dans $debut et $fin. Fonctionne en décrémentant, donc ça peut être
  * long. $fin exclus. */
