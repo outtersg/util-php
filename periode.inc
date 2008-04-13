@@ -59,7 +59,7 @@ function periode_affDate($date, $mode = 0)
 		$precedent = false;
 		if($date[$i] >= 0)
 		{
-			$hms .= ($hms && $lettres ? ' ' : '').$date[$i];
+			$hms .= ($hms && $lettres ? ' ' : '').($lAutre ? sprintf("%02.2d", $date[$i]) : $date[$i]);
 			if(!$lAutre)
 			{
 				$hms .= $lettres ? ' '.Periode::$UNITES[$i] : ':';
