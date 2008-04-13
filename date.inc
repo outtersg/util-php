@@ -120,7 +120,7 @@ function lireHeure($date, $tenterAussiLaDate)
 		
 		if($debut < 0)
 			$suggestion2[] = 0;
-		else if($c == ' ')
+		else if($c == ' ' || $c == 'T')
 			$suggestion2[] = 0;
 		else if($c == 'h')
 		{
@@ -149,7 +149,7 @@ function lireHeure($date, $tenterAussiLaDate)
 		
 		$fin = $debut;
 		
-		if($c == ' ') break;
+		if($c == ' ' || $c == 'T') break;
 	}
 	
 	/* Rangement de l'horaire dans les bonnes cases */
