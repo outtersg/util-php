@@ -25,30 +25,9 @@ require_once('date.inc');
 
 /* La période est un couple de dates en tableau. Cf. date.inc */
 
-/* À FAIRE: possibilités de formatage plus élaborées (déjà, remplacer le - entre
- * deux dates par un « à »). */
-/* À FAIRE: le truc super complexe que j'avais fait à CS pour Brit Air, qui
- * tenait compte des heures (si mes souvenirs sont bons, on avait une notion de
- * limite de compression qui se baladait: par exemple, 10/10/1979 à 12/10/1979
- * s'affichait « du 10 au 12/10/1979 », mais si une heure se rajoutait à ça on
- * rebasculait sur l'affichage de la date complète).
 /*- Affichage ----------------------------------------------------------------*/
 
-function periode_aff($entre, $et, $mode = 0)
-{
-	$entre2 = $entre;
-	$aff = periode_affDate($et, $mode);
-	for($i = 0; $i < 6; ++$i)
-		if($entre2[$i] == $et[$i] || $entre2[$i] == -1)
-			$entre2[$i] = -1;
-		else
-			break;
-	if($i >= 6) return $aff; // Les deux dates sont strictement les mêmes.
-	$aff = ($mode == Periode::$REDIGE ? 'de ' : '').periode_affDate($entre2, $mode).($mode == Periode::$REDIGE ? ' à ' : ' - ').$aff;
-	if($mode == Periode::$REDIGE)
-		$aff = strtr($aff, array('de le' => 'du', 'à le' => 'au'));
-	return $aff;
-}
+function periode_aff($entre, $et, $mode = 0) { return Periode::aff(Date::fem($entre), Date::fem($et), $mode); }
 
 function periode_affDate($date, $mode = 0)
 {
@@ -71,9 +50,28 @@ function periode_affDate($date, $mode = 0)
 			if($date[2] >= 0) $total = sprintf('%02.2d%s', $date[2], $total === null ? '' : $sepDate).$total;
 		}
 	}
-	/* À FAIRE: heures, minutes, secondes */
 	
-	if($mode == Periode::$REDIGE && $date[2] !== null)
+	$hms = '';
+	$precedent = false; // Pour la simplification d'écriture, dans certains cas on permettra à deux nombres successifs de se partager l'unité du premier comme séparateur; on économise alors l'unité du second.
+	for($i = 3; $i < 6; ++$i)
+	{
+		$lAutre = $precedent;
+		$precedent = false;
+		if($date[$i] >= 0)
+		{
+			$hms .= ($hms && $lettres ? ' ' : '').$date[$i];
+			if(!$lAutre)
+			{
+				$hms .= $lettres ? ' '.Periode::$UNITES[$i] : ':';
+				$precedent = true;
+			}
+		}
+	}
+	
+	if($hms)
+		$total .= ($total ? ' ' : '').($mode == Periode::$REDIGE ? 'à ' : '').$hms;
+	
+	if($mode == Periode::$REDIGE && $date[2] >= 0)
 		$total = 'le '.$total;
 	return $total;
 }
@@ -104,7 +102,98 @@ class Periode
 	static public $NUMERIQUE = 1;
 	static public $COURT = 2;
 	static public $REDIGE = 3;
-
+	
+	static public $UNITES = array(false, false, false, 'h', 'mn', 's');
+	
+	function aff($entre, $et, $mode = 0)
+	{
+		$b2 = $b1 = ''; // Blocs présents dans les dates; une fois déterminés, on tentera de les réduire pour en afficher le minimum.
+		
+		/* Détermination de ce qu'on a en commun. */
+		
+		for($i = 0, $premierDef = -1; $i < 6 && ($entre[$i] == $et[$i] || $et[$i] === false); ++$i) // $i, on aurait pu l'appeler $premierDif, car en fin de boucle ce sera le numéro du premier champ différant entre entre et et. Mais à écrire, c'est long.
+			if(($et[$i] = $entre[$i]) !== false && $premierDef == -1) // Affectation au cas où il est indéfini.
+				$premierDef = $i;
+		if($premierDef < 0 && $i < 6)
+			$premierDef = $i;
+		for($dernierDef = 6; --$dernierDef > $premierDef && $entre[$dernierDef] === false && $et[$dernierDef] === false;) {}
+		
+		/* Exception pour les fêtards: la nuit est considérée comme une seule journée. */
+		
+		if($i <= 2 && $et[$i] == $entre[$i] + 1) // Si on s'est arrêté au jour ou sur un champ précédent (ex.: pour la nuit de la saint Sylvestre, c'est dès l'année que les deux divergent), et que sur ce champ on a une différence d'1.
+		{
+			if(Date::calculer($et) - Date::calculer($entre) < 3600 * 23) // À consommer dans les 24 h, moins une heure de marge pour l'éventualité du changement d'heure et parce qu'il faut rester raisonnable quand on fait nuit blanche. Et on se fiche d'une différence négative, parce que nos périodes ne sont pas censées aller à rebrousse-temps.
+				$i = 3;
+		}
+		
+		/* Choix d'un regroupement de champs. On tente de factoriser. Cependant on
+		 * s'interdit (en français) de couper un bloc jma par de l'hms. De ce fait,
+		 * si l'on peut décomposer les dates en trois blocs S (partie spécifique du
+		 * jma), C (partie commune entre entre et et) et H (hma), on a droit aux
+		 * combinaisons S1 - S2 C et S1 C H1 - S2 H2, mais pas S1 H1 - S2 H2 C. Et
+		 * S1 H1 S2 C H2 paraît peu naturel. */
+		
+		$reducs = array('SC.SC' => 'S.SC', 'Cs.Cs' => 'C_s.s', 'SCs.SCs' => 'SCs.Ss', 'Cc.Cc' => 'Cc.');
+		
+		if($premierDef < 3)
+		{
+			if($i > $premierDef)
+				$b2 = $b1 = 'C';
+			if($i < 3)
+				$b2 = $b1 = 'S'.$b1;
+		}
+		if($dernierDef >= 3)
+			$b2 = $b1 = $b1.($i < 6 ? 's' : 'c'); // Du moment qu'un élément de l'heure diffère, c'est l'heure en bloc que l'on affichera.
+		
+		if(array_key_exists($b1 .= '.'.$b2, $reducs))
+			$b1 = $reducs[$b1];
+		
+		$b = explode('.', strtr($b1, array('c' => 's', 'SCs' => 'T', 'SC' => 'J'))); // Simplification pour plus tard. T comme totale, J comme jour.
+		
+		/* Affichage. */
+		
+		$blocs = array();
+		foreach(array($entre, $et) as $n => $d)
+			if(($b1 = $b[$n]))
+			{
+				$b2 = array();
+				if(strpos($b1, '_') === false)
+					$b1 = '_'.$b1;
+				for($z = 0; $z < strlen($b1); ++$z)
+				{
+					switch($b1{$z})
+					{
+						case '_':
+							$b2[] = '_';
+							continue 2;
+						case 'T': $entre = 0; $et = 5; break;
+						case 'J': $entre = 0; $et = 2; break;
+						case 'C': $entre = 0; $et = $i < 3 ? $i - 1 : 2; break;
+						case 'S': $entre = $i; $et = 2; break;
+						case 's': $entre = 3; $et = 5; break;
+					}
+					$d2 = array(false, false, false, false, false, false);
+					for(; $entre <= $et; ++$entre)
+						$d2[$entre] = $d[$entre];
+					$b2[] = Periode::affDate($d2, $mode);
+				}
+				$blocs[] = join(' ', $b2);
+			}
+		foreach($blocs as $n => $b)
+			$blocs[$n] = strtr($b, array('_' => (count($blocs) == 1 ? '' : ($mode == Periode::$REDIGE ? $n ? 'à' : 'de' : '-'))));
+		$aff = implode(' ', $blocs);
+		if($mode == Periode::$REDIGE)
+			$aff = strtr($aff, array('  ' => ' ', 'de le' => 'du', 'à à' => 'à', 'à le' => 'au', 'de à' => 'de'));
+		if($aff{0} == ' ')
+			$aff = substr($aff, 1);
+		return $aff;
+	}
+	
+	function affDate($d, $mode)
+	{
+		return periode_affDate(Date::fem($d), $mode);
+	}
+	
 /* Calcule la durée d'une période. L'unité est le plus petit champ rempli à la
  * fois dans $debut et $fin. Fonctionne en décrémentant, donc ça peut être
  * long. $fin exclus. */
