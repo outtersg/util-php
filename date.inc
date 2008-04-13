@@ -115,6 +115,13 @@ function lireHeure($date, $tenterAussiLaDate)
 		$debut = $fin;
 		while(--$debut >= 0 && false !== strpos(Date::$g_chiffres, $c = $date{$debut})) {}
 		$valeurs[] = ($debut + 1 < $fin ? intval(substr($date, $debut + 1, $fin)) : false);
+		while(--$debut >= 0 && false === strpos(Date::$g_chiffres, $c2 = $date{$debut}))
+			$c = $c2.$c;
+		++$debut;
+		
+		$c = strtr($c, array(' ' => '', ' ' => '')); // Réduction des espaces et espaces insécables.
+		if(strlen($c) < 1)
+			$c = ' ';
 		
 		/* Interprétation du séparateur */
 		
