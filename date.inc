@@ -50,7 +50,8 @@ function aff_tableau($tableau)
 	return $machin;
 }
 
-function date_affichage_tableau($tableau)
+function date_affichage_tableau($tableau) { return Date::aff($tableau); }
+function aff($tableau)
 {
 	$masque = 0;
 	
