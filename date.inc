@@ -162,11 +162,11 @@ function lireHeure($date, $tenterAussiLaDate)
 	
 	/* Rangement de l'horaire dans les bonnes cases */
 	
-	$rangement = array(-1, -1, -1); // Indice dans $valeurs du machin qui doit aller dans la case correspondante; plus tard on y mettra la valeur elle-même, mais à chaque jour suffit sa peine.
+	$rangement = array(false, false, false); // Indice dans $valeurs du machin qui doit aller dans la case correspondante; plus tard on y mettra la valeur elle-même, mais à chaque jour suffit sa peine.
 	
 	for($debut = count($valeurs); --$debut >= 0;) // Première passe: les champs dont on est sûr de la destination (le $suggestion correspondant a une valeur positive).
 		if($valeurs[$debut] !== false && $suggestion[$debut] >= 0)
-			if($rangement[$suggestion[$debut]] < 0)
+			if($rangement[$suggestion[$debut]] === false)
 			{
 				$rangement[$suggestion[$debut]] = $debut;
 				$suggestion2[$debut] = -1;
@@ -178,10 +178,10 @@ function lireHeure($date, $tenterAussiLaDate)
 			}
 	
 	for($j = count($rangement); --$j >= 0;) // Deuxième passe: les suggestions un peu moins fiables sont utilisées pour remplir les trous
-		if($rangement[$j] < 0) // Pas trouvé à la première passe.
+		if($rangement[$j] === false) // Pas trouvé à la première passe.
 			for($debut = count($valeurs); --$debut >= 0;)
 				if($valeurs[$debut] !== false && $suggestion2[$debut] == $j)
-					if($rangement[$j] < 0)
+					if($rangement[$j] === false)
 						$rangement[$j] = $debut;
 					else
 					{
@@ -190,7 +190,7 @@ function lireHeure($date, $tenterAussiLaDate)
 					}
 	
 	for($j = 0, $debut = count($valeurs); $j < count($rangement); ++$j) // Dernière passe: remplissage avec ce qui reste, dans l'ordre commun: heure-minute-seconde.
-		if($rangement[$j] < 0) // Un truc restant à remplir.
+		if($rangement[$j] === false) // Un truc restant à remplir.
 		{
 			while(--$debut >= 0 && ($valeurs[$debut] === false || $suggestion[$debut] >= 0 || $suggestion2[$debut] >= 0)) {} // Tant qu'on a des valeurs, invalides ou déjà exploitées, on remonte.
 			if($debut < 0) break;
