@@ -71,13 +71,21 @@ function aff($tableau)
 	
 	/* Heure */
 	
-	if(($tableau[3] !== false) || ($tableau[4] !== false) || ($tableau[5] !== false))
+	$heure = '';
+	$unites = array('h', 'm', 's');
+	$t2 = array();
+	for($i = 3; $i < 6; ++$i)
+		if($tableau[$i] !== false)
+		{
+			$heure = "%02.2d".$unites[$i - 3].$heure;
+			$t2[] = $tableau[$i];
+		}
+	if($heure)
 	{
-		if(($h = $tableau[3]) === false) $h = 0;
-		if(($m = $tableau[4]) === false) $m = 0;
-		$heure = sprintf('%02d:%02d', $h, $m);
-		if(($i = $tableau[5]) !== false)
-			$heure .= sprintf(':%02d', $i);
+		foreach(array('%02.2dh%02.2dm%02.2ds' => '%02.2d:%02.2d:%02.2d', '%02.2dh%02.2dm' => '%02.2d:%02.2d') as $a => $n)
+			if($heure == $a)
+				$heure = $n;
+		$heure = sprintf($heure, $t2[0], $t2[1], $t2[2]);
 		$masque |= 1;
 	}
 	
