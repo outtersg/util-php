@@ -180,7 +180,7 @@ function lireHeure($date, $tenterAussiLaDate)
 	for($j = count($rangement); --$j >= 0;) // Deuxième passe: les suggestions un peu moins fiables sont utilisées pour remplir les trous
 		if($rangement[$j] === false) // Pas trouvé à la première passe.
 			for($debut = count($valeurs); --$debut >= 0;)
-				if($valeurs[$debut] !== false && $suggestion2[$debut] == $j)
+				if(isset($valeurs[$debut]) && $suggestion2[$debut] == $j)
 					if($rangement[$j] === false)
 						$rangement[$j] = $debut;
 					else
@@ -193,7 +193,7 @@ function lireHeure($date, $tenterAussiLaDate)
 		if($rangement[$j] === false) // Un truc restant à remplir.
 		{
 			while(--$debut >= 0 && ($valeurs[$debut] === false || $suggestion[$debut] >= 0 || $suggestion2[$debut] >= 0)) {} // Tant qu'on a des valeurs, invalides ou déjà exploitées, on remonte.
-			if($debut < 0) break;
+			if($debut < 0) continue;
 			$rangement[$j] = $valeurs[$debut]; // On stocke directement la valeur.
 		}
 		else
