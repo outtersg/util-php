@@ -128,22 +128,29 @@ function lireHeure($date, $tenterAussiLaDate)
 		
 		if($debut < 0)
 			$suggestion2[] = 0;
-		else if($c == ' ' || $c == 'T')
-			$suggestion2[] = 0;
-		else if($c == 'h')
+		else switch($c)
 		{
+			case ' ':
+			case 'T':
+				$suggestion2[] = 0;
+				break;
+			case 'h':
 			$suggestion[] = 0;
 			$suggestion2[] = 1;
-		}
-		else if($c == "'")
-		{
+				break;
+			case "'":
+			case 'm':
+			case 'mn':
 			$suggestion[] = 1;
 			$suggestion2[] = 2;
-		}
-		else if($c == '"')
+				break;
+			case '"':
+			case 's':
 			$suggestion[] = 2;
-		else if($c != ':')
-		{
+				break;
+			case ':':
+				break;
+			default:
 			if($tenterAussiLaDate)
 				return Date::assembler(Date::lireJour($date), array(false, false, false));
 			//print('### délimiteur horaire non reconnu: \''.$c.'\' dans '.$date.'.<br/>');
