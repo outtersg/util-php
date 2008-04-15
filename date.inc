@@ -414,10 +414,10 @@ function afficher_test_decoupage_datation($date)
 	$tableau = decouper_datation($date);
 	if($tableau != null)
 	{
-		print('  '.aff_tableau($tableau).': '.$date.'<br/>');
+		print('  '.aff_tableau($tableau).': '.$date.'<br/>'."\n");
 	}
 	else
-		print('(échec pour '.$date.')<br/>');
+		print('(échec pour '.$date.')<br/>'."\n");
 }
 
 /*- Compatibilité ------------------------------------------------------------*/
