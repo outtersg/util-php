@@ -59,7 +59,7 @@ function aff($tableau)
 	
 	$jour = '';
 	for($i = 0; $i < 3; ++$i)
-		if((($nombre = $tableau[$i]) >= 0) || ($i == 1 && $tableau[0] >= 0 && $tableau[2] >= 0))
+		if((($nombre = $tableau[$i]) !== false) || ($i == 1 && $tableau[0] !== false && $tableau[2] !== false))
 		{
 			if($nombre < 0) $nombre = 1;
 			if($i == 0)
@@ -71,12 +71,12 @@ function aff($tableau)
 	
 	/* Heure */
 	
-	if(($tableau[3] >= 0) || ($tableau[4] >= 0) || ($tableau[5] >= 0))
+	if(($tableau[3] !== false) || ($tableau[4] !== false) || ($tableau[5] !== false))
 	{
-		if(($h = $tableau[3]) < 0) $h = 0;
-		if(($m = $tableau[4]) < 0) $m = 0;
+		if(($h = $tableau[3]) === false) $h = 0;
+		if(($m = $tableau[4]) === false) $m = 0;
 		$heure = sprintf('%02d:%02d', $h, $m);
-		if(($i = $tableau[5]) >= 0)
+		if(($i = $tableau[5]) !== false)
 			$heure .= sprintf(':%02d', $i);
 		$masque |= 1;
 	}
