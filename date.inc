@@ -419,6 +419,8 @@ function tester_decoupage_datation()
 		'23/08/2003 23:13:22',
 		'3 mn 15',
 		'8 m 15s',
+		'15',
+		'15h',
 	);
 	for($y = count($tests); --$y >= 0;)
 		afficher_test_decoupage_datation($tests[$y]);
