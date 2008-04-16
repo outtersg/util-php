@@ -77,7 +77,7 @@ function aff($tableau)
 	for($i = 3; $i < 6; ++$i)
 		if($tableau[$i] !== false)
 		{
-			$heure = "%02.2d".$unites[$i - 3].$heure;
+			$heure .= "%02.2d".$unites[$i - 3];
 			$t2[] = $tableau[$i];
 		}
 	if($heure)
