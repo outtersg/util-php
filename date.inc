@@ -204,17 +204,17 @@ function lireHeure($date, $tenterAussiLaDate)
 						return null;
 					}
 	
-	for($j = 0, $debut = count($valeurs); $j < count($rangement); ++$j) // Dernière passe: remplissage avec ce qui reste, dans l'ordre commun: heure-minute-seconde.
+	for($nTrous = 0, $j = 0, $debut = count($valeurs); $j < 3; ++$j) // Dernière passe: remplissage avec ce qui reste, dans l'ordre commun: heure-minute-seconde.
 		if($rangement[$j] === false) // Un truc restant à remplir.
 		{
 			while(--$debut >= 0 && ($valeurs[$debut] === false || $suggestion[$debut] >= 0 || $suggestion2[$debut] >= 0)) {} // Tant qu'on a des valeurs, invalides ou déjà exploitées, on remonte.
-			if($debut < 0) continue;
+			if($debut < 0) { ++$nTrous; continue; }
 			$rangement[$j] = $valeurs[$debut]; // On stocke directement la valeur.
 		}
 		else
 			$rangement[$j] = $valeurs[$rangement[$j]]; // On en profite pour faire le remplissage définitif, avec les valeurs.
 	
-	if($j < 2) // Un seul nombre ne nous suffit pas à l'accepter en tant qu'heure seule.
+	if($nTrous >= 2) // Un seul nombre ne nous suffit pas à l'accepter en tant qu'heure seule.
 	{
 		for($j = count($valeurs); --$j >= 0;)
 			if($valeurs[$j] !== false)
