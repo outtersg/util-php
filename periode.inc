@@ -133,7 +133,7 @@ class Periode
 		 * combinaisons S1 - S2 C et S1 C H1 - S2 H2, mais pas S1 H1 - S2 H2 C. Et
 		 * S1 H1 S2 C H2 paraît peu naturel. */
 		
-		$reducs = array('SC.SC' => 'S.SC', 'Cs.Cs' => 'C_s.s', 'SCs.SCs' => 'SCs.Ss', 'Cc.Cc' => 'Cc.');
+		$reducs = array('SC.SC' => 'S.SC', 'Cs.Cs' => 'C_s.s', 'SCs.SCs' => 'SCs.Ss', 'Cc.Cc' => 'Cc.', 'C.C' => 'C.');
 		
 		if($premierDef < 3)
 		{
