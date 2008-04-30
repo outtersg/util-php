@@ -59,7 +59,7 @@ function aff($tableau)
 	
 	$jour = '';
 	for($i = 0; $i < 3; ++$i)
-		if((($nombre = $tableau[$i]) !== false) || ($i == 1 && $tableau[0] !== false && $tableau[2] !== false))
+		if((($nombre = $tableau[$i]) !== null) || ($i == 1 && $tableau[0] !== null && $tableau[2] !== null))
 		{
 			if($nombre < 0) $nombre = 1;
 			if($i == 0)
@@ -75,7 +75,7 @@ function aff($tableau)
 	$unites = array('h', 'm', 's');
 	$t2 = array();
 	for($i = 3; $i < 6; ++$i)
-		if($tableau[$i] !== false)
+		if($tableau[$i] !== null)
 		{
 			$heure .= "%02.2d".$unites[$i - 3];
 			$t2[] = $tableau[$i];
@@ -123,7 +123,7 @@ function lireHeure($date, $tenterAussiLaDate)
 		
 		$debut = $fin;
 		while(--$debut >= 0 && false !== strpos(Date::$g_chiffres, $c = $date{$debut})) {}
-		$valeurs[] = ($debut + 1 < $fin ? intval(substr($date, $debut + 1, $fin)) : false);
+		$valeurs[] = ($debut + 1 < $fin ? intval(substr($date, $debut + 1, $fin)) : null);
 		while(--$debut >= 0 && false === strpos(Date::$g_chiffres, $c2 = $date{$debut}))
 			$c = $c2.$c;
 		++$debut;
@@ -160,7 +160,7 @@ function lireHeure($date, $tenterAussiLaDate)
 				break;
 			default:
 			if($tenterAussiLaDate)
-				return Date::assembler(Date::lireJour($date), array(false, false, false));
+				return Date::assembler(Date::lireJour($date), array(null, null, null));
 			//print('### délimiteur horaire non reconnu: \''.$c.'\' dans '.$date.'.<br/>');
 			return null;
 		}
@@ -177,11 +177,11 @@ function lireHeure($date, $tenterAussiLaDate)
 	
 	/* Rangement de l'horaire dans les bonnes cases */
 	
-	$rangement = array(false, false, false); // Indice dans $valeurs du machin qui doit aller dans la case correspondante; plus tard on y mettra la valeur elle-même, mais à chaque jour suffit sa peine.
+	$rangement = array(null, null, null); // Indice dans $valeurs du machin qui doit aller dans la case correspondante; plus tard on y mettra la valeur elle-même, mais à chaque jour suffit sa peine.
 	
 	for($debut = count($valeurs); --$debut >= 0;) // Première passe: les champs dont on est sûr de la destination (le $suggestion correspondant a une valeur positive).
-		if($valeurs[$debut] !== false && $suggestion[$debut] >= 0)
-			if($rangement[$suggestion[$debut]] === false)
+		if($valeurs[$debut] !== null && $suggestion[$debut] >= 0)
+			if($rangement[$suggestion[$debut]] === null)
 			{
 				$rangement[$suggestion[$debut]] = $debut;
 				$suggestion2[$debut] = -1;
@@ -193,10 +193,10 @@ function lireHeure($date, $tenterAussiLaDate)
 			}
 	
 	for($j = count($rangement); --$j >= 0;) // Deuxième passe: les suggestions un peu moins fiables sont utilisées pour remplir les trous
-		if($rangement[$j] === false) // Pas trouvé à la première passe.
+		if($rangement[$j] === null) // Pas trouvé à la première passe.
 			for($debut = count($valeurs); --$debut >= 0;)
 				if(isset($valeurs[$debut]) && $suggestion2[$debut] == $j)
-					if($rangement[$j] === false)
+					if($rangement[$j] === null)
 						$rangement[$j] = $debut;
 					else
 					{
@@ -205,9 +205,9 @@ function lireHeure($date, $tenterAussiLaDate)
 					}
 	
 	for($nTrous = 0, $j = 0, $debut = count($valeurs); $j < 3; ++$j) // Dernière passe: remplissage avec ce qui reste, dans l'ordre commun: heure-minute-seconde.
-		if($rangement[$j] === false) // Un truc restant à remplir.
+		if($rangement[$j] === null) // Un truc restant à remplir.
 		{
-			while(--$debut >= 0 && ($valeurs[$debut] === false || $suggestion[$debut] >= 0 || $suggestion2[$debut] >= 0)) {} // Tant qu'on a des valeurs, invalides ou déjà exploitées, on remonte.
+			while(--$debut >= 0 && ($valeurs[$debut] === null || $suggestion[$debut] >= 0 || $suggestion2[$debut] >= 0)) {} // Tant qu'on a des valeurs, invalides ou déjà exploitées, on remonte.
 			if($debut < 0) { ++$nTrous; continue; }
 			$rangement[$j] = $valeurs[$debut]; // On stocke directement la valeur.
 		}
@@ -217,12 +217,12 @@ function lireHeure($date, $tenterAussiLaDate)
 	if($nTrous >= 2) // Un seul nombre ne nous suffit pas à l'accepter en tant qu'heure seule.
 	{
 		for($j = count($valeurs); --$j >= 0;)
-			if($valeurs[$j] !== false)
+			if($valeurs[$j] !== null)
 				break;
 		if($suggestion[$j] < 0) // Bon, si on a trouvé un marquage fort, on continue en considérant qu'il s'agit d'une heure.
 		{
 			if($tenterAussiLaDate)
-				return Date::assembler(Date::lireJour($date), array(false, false, false));
+				return Date::assembler(Date::lireJour($date), array(null, null, null));
 			//print('### heure incomplète dans '.$date.' (il faut au moins les heures et minutes).<br/>');
 			return null;
 		}
@@ -230,12 +230,12 @@ function lireHeure($date, $tenterAussiLaDate)
 	
 	/* Interprétation de la date */
 	
-	return ($tenterAussiLaDate ? Date::assembler($fin > 0 ? Date::lireJour(substr($date, 0, $fin)) : array(false, false, false), $rangement) : $rangement);
+	return ($tenterAussiLaDate ? Date::assembler($fin > 0 ? Date::lireJour(substr($date, 0, $fin)) : array(null, null, null), $rangement) : $rangement);
 }
 
 function lireJour($date)
 {
-	if(strlen($date) == 0) return array(false, false, false);
+	if(strlen($date) == 0) return array(null, null, null);
 	
 	/* Stockage des valeurs */
 	
@@ -296,13 +296,13 @@ function lireJour($date)
 	/* Recherche de l'année (quatre chiffres); On décale en conséquence. */
 	
 	if($fin > 0 && $longueurs[0] == 4) // La date contient une année; elle reste en première position.
-		while($fin < 3) { $valeurs[] = false; ++$fin; }
-	else // Pas trouvé d'année, on complète par des false (ce qui nous donne: 1 élément: jour; 2: jour et mois, 3: ben tout).
+		while($fin < 3) { $valeurs[] = null; ++$fin; }
+	else // Pas trouvé d'année, on complète par des null (ce qui nous donne: 1 élément: jour; 2: jour et mois, 3: ben tout).
 	{
 		for($debut = 3; --$fin >= 0;)
 			$valeurs[--$debut] = $valeurs[$fin];
 		while(--$debut >= 0)
-			$valeurs[$debut] = false;
+			$valeurs[$debut] = null;
 	}
 	
 	return $valeurs;
@@ -324,7 +324,7 @@ function completer($original, $avec)
 	if($original == null) return $avec;
 	if($avec == null) return $original;
 	for($i = 6; --$i >= 0;)
-		if($avec[$i] !== false)
+		if($avec[$i] !== null)
 			$original[$i] = $avec[$i];
 	return $original;
 }
@@ -336,7 +336,7 @@ function decompleter($date, $reference)
 		return $date;
 	for($i = -1; ++$i < 6;)
 		if($reference[$i] === $date[$i])
-			$date[$i] = false;
+			$date[$i] = null;
 		else
 			break;
 	return $date;
@@ -344,8 +344,8 @@ function decompleter($date, $reference)
 
 function calculer($chose)
 {
-	/* Un mktime avec des false, ça ne va pas être terrible. */
-	if($chose == null || in_array(false, $chose))
+	/* Un mktime avec des null, ça ne va pas être terrible. */
+	if($chose == null || in_array(null, $chose))
 		$chose = Date::completer(array(1970, 1, 1, 0, 0, 0), $chose);
 	return mktime($chose[3], $chose[4], $chose[5], $chose[1], $chose[2], $chose[0] >= 0 ? $chose[0] : 0);
 }
@@ -364,11 +364,11 @@ function corriger($chose)
 	 * place à posteriori. */
 	$indefinis = array();
 	foreach($chose as $i => $n)
-		if($n === false)
+		if($n === null)
 			$indefinis[] = $i;
 	$r = obtenir_datation(Date::calculer($chose));
 	foreach($indefinis as $i)
-		$r[$i] = false;
+		$r[$i] = null;
 	return $r;
 }
 
@@ -386,7 +386,7 @@ function comparer($d0, $d1)
 		return 2;
 	for($i = 0; $i < 6; ++$i)
 	{
-		if(($d0[$i] === false && $d1[$i] !== false) || ($d1[$i] === false && $d0[$i] !== false))
+		if(($d0[$i] === null && $d1[$i] !== null) || ($d1[$i] === null && $d0[$i] !== null))
 			return 0; // Vous êtes incomparables, toutes les deux.
 		if($d0[$i] < $d1[$i]) return -1;
 		if($d0[$i] > $d1[$i]) return 1;
@@ -397,7 +397,7 @@ function comparer($d0, $d1)
 function moins($date, $moins)
 {
 	foreach($date as $i => $e)
-		if($e !== false && array_key_exists($i, $moins) && $moins[$i] !== false)
+		if($e !== null && array_key_exists($i, $moins) && $moins[$i] !== null)
 		{
 			$date[$i] -= $moins[$i];
 			$date = Date::corriger($date);
@@ -443,14 +443,14 @@ function mef($date)
 {
 	for($i = 6; --$i >= 0;)
 		if($date[$i] < 0)
-			$date[$i] = false;
+			$date[$i] = null;
 	return $date;
 }
 
 function fem($date)
 {
 	for($i = 6; --$i >= 0;)
-		if($date[$i] === false)
+		if($date[$i] === null)
 			$date[$i] = -1;
 	return $date;
 }
