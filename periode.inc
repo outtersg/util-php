@@ -111,12 +111,12 @@ class Periode
 		
 		/* Détermination de ce qu'on a en commun. */
 		
-		for($i = 0, $premierDef = -1; $i < 6 && ($entre[$i] == $et[$i] || $et[$i] === false); ++$i) // $i, on aurait pu l'appeler $premierDif, car en fin de boucle ce sera le numéro du premier champ différant entre entre et et. Mais à écrire, c'est long.
-			if(($et[$i] = $entre[$i]) !== false && $premierDef == -1) // Affectation au cas où il est indéfini.
+		for($i = 0, $premierDef = -1; $i < 6 && ($entre[$i] == $et[$i] || $et[$i] === null); ++$i) // $i, on aurait pu l'appeler $premierDif, car en fin de boucle ce sera le numéro du premier champ différant entre entre et et. Mais à écrire, c'est long.
+			if(($et[$i] = $entre[$i]) !== null && $premierDef == -1) // Affectation au cas où il est indéfini.
 				$premierDef = $i;
 		if($premierDef < 0 && $i < 6)
 			$premierDef = $i;
-		for($dernierDef = 6; --$dernierDef > $premierDef && $entre[$dernierDef] === false && $et[$dernierDef] === false;) {}
+		for($dernierDef = 6; --$dernierDef > $premierDef && $entre[$dernierDef] === null && $et[$dernierDef] === null;) {}
 		
 		/* Exception pour les fêtards: la nuit est considérée comme une seule journée. */
 		
@@ -172,7 +172,7 @@ class Periode
 						case 'S': $entre = $i; $et = 2; break;
 						case 's': $entre = 3; $et = 5; break;
 					}
-					$d2 = array(false, false, false, false, false, false);
+					$d2 = array(null, null, null, null, null, null);
 					for(; $entre <= $et; ++$entre)
 						$d2[$entre] = $d[$entre];
 					$b2[] = Periode::affDate($d2, $mode);
@@ -224,7 +224,7 @@ function duree($debut, $fin, $numChampUnite = false)
 	 * 1 h, 24 h dans un jour sauf au changement d'heure, etc. */
 	if($numChampUnite === false)
 	{
-		for($numChampUnite = 6; --$numChampUnite >= 0 && ($debut[$numChampUnite] === false || $fin[$numChampUnite] === false);) {}
+		for($numChampUnite = 6; --$numChampUnite >= 0 && ($debut[$numChampUnite] === null || $fin[$numChampUnite] === null);) {}
 		if($numChampUnite < 0)
 			return false; // Rien à comparer!
 	}
