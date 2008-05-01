@@ -51,6 +51,30 @@ function periode_affDate($date, $mode = 0)
 		}
 	}
 	
+	/* Trois conditions à l'écriture de l'heure en abrégé, pour qu'il n'y ait
+	 * pas d'ambiguïté::
+	 * - contiguïté des champs
+	 * - plus d'un champ, sans quoi pas de séparateur, qui distingue l'heure du
+	 *   jour
+	 * - on commence au premier champ
+	 */
+	if(!$lettres)
+	{
+		for($i = 2; ++$i < 6 && $date[$i] >= 0;) {}
+		for($j = $i; ++$j < 6;)
+			if($date[$j] >= 0) // Encore des champs après, donc en $i on a un trou.
+				$lettres = true; // Ça c'est le terme anglais qui se lit « trou ».
+		if($i == 4) // Seul un champ renseigné, or on veut un séparateur.
+			$lettres = true;
+	}
+	if(!$lettres) // Est-on passé à travers tous les tests sans perdre notre qualité de !$lettres?
+	{
+		$hms = '';
+		while(--$i >= 3)
+			$hms = ($i == 3 ? '' : ':').sprintf("%02.2d", $date[$i]).$hms;
+	}
+	else
+	{
 	$hms = '';
 	$precedent = false; // Pour la simplification d'écriture, dans certains cas on permettra à deux nombres successifs de se partager l'unité du premier comme séparateur; on économise alors l'unité du second.
 	for($i = 3; $i < 6; ++$i)
@@ -59,13 +83,14 @@ function periode_affDate($date, $mode = 0)
 		$precedent = false;
 		if($date[$i] >= 0)
 		{
-			$hms .= ($hms && $lettres ? ' ' : '').($lAutre ? sprintf("%02.2d", $date[$i]) : $date[$i]);
+				$hms .= $lAutre ? sprintf("%02.2d", $date[$i]) : ($hms ? ' ' : '').$date[$i];
 			if(!$lAutre)
 			{
-				$hms .= $lettres ? ' '.Periode::$UNITES[$i] : ':';
+					$hms .= Periode::$UNITES[$i];
 				$precedent = true;
 			}
 		}
+	}
 	}
 	
 	if($hms)
