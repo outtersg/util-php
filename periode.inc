@@ -81,7 +81,7 @@ function periode_affDate($date, $mode = 0)
 	{
 		$lAutre = $precedent;
 		$precedent = false;
-		if($date[$i] >= 0)
+		if($date[$i] >= 0 && $date[$i] !== null)
 		{
 				$hms .= $lAutre ? sprintf("%02.2d", $date[$i]) : ($hms ? ' ' : '').$date[$i];
 			if(!$lAutre)
