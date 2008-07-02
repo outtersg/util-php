@@ -29,12 +29,16 @@ require_once 'fichierzip.php';
 
 class FichierIci extends FichierZip
 {
+	public $modef = false; // Masque de création des fichiers.
+	public $moded = false; // Idem pour les dossiers.
 	protected $ou;
 	/* Variables relatives au fichier en cours d'inclusion. */
 	protected $fichier;
 	
 	function FichierIci($ou)
 	{
+		$this->moded = false;
+		$this->modef = false;
 		$this->chemin = is_a($ou, 'chemin') ? $ou : new Chemin($ou);
 		$this->chemin->creerDossier();
 	}
@@ -51,9 +55,9 @@ class FichierIci extends FichierZip
 	function enTeteFichier($nomFichier, $infos = null)
 	{
 		$nomFichier = $this->chemin->et($nomFichier);
-		$nomFichier->creerDossier();
+		$nomFichier->creerDossier($this->moded);
 		if($nomFichier->fichier !== null)
-			if(!($this->fichier = @fopen($nomFichier->cheminComplet(), 'w'))) return false;
+			if(!($this->fichier = @fopen($nomFichier->cheminComplet(), 'w', $this->modef === false ? 0700 : $this->modef))) return false;
 		return true;
  	}
 	
