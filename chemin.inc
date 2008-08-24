@@ -47,12 +47,11 @@ class Chemin
 	/* Constructeur. Le paramètre 'depuis' doit être renseigné si le répertoire
 	 * de départ est différent du répertoire courant (d'exécution du script). Il
 	 * permet l'exploration correcte du système de fichier autour du chemin. */
-	function Chemin($acces = null, $depuis = null, $dansServeurDepuis = false)
+	function Chemin($acces = null, $depuis = null)
 	{
 		$this->chemin = array();
 		$this->fichier = null;
 		$this->depuis = ($depuis === null ? $GLOBALS['cheminDepart'] : $depuis); // Tant qu'on ne nous dit pas le contraire
-		$this->absoluRelatifAuProtocole = $dansServeurDepuis;
 		
 		if($acces)
 			$this->decouper($acces);
@@ -63,7 +62,7 @@ class Chemin
 		$r = clone $this;
 		if(is_a($chemin, Chemin))
 		{
-			if($chemin->absoluRelatifAuProtocole && $chemin->protocole === '/' && $r->protocole !== null && $r->protocole !== '/') // Un protocole façon URL passe devant un chemin absolu.
+			if($chemin->protocole === '/' && $r->protocole !== null && $r->protocole !== '/') // Un protocole façon URL passe devant un chemin absolu.
 				$r->chemin = array_slice($r->chemin, 0, 2);
 			else
 			if($chemin->protocole !== null) // Si l'ajout est une adresse absolue, il se fiche de ce qu'on peut lui placer devant (par exemple $this).
@@ -105,8 +104,13 @@ class Chemin
 			}
 			else if($debut == 0) // Le premier '/' est spécial, il indique un chemin absolu
 			{
+				if(!$this->surServeur() || !count($this->chemin) || $this->chemin[0] == -1) // Les protos dont le premier élément est déjà un élément de chemin.
+				{
 				$this->protocole = '/';
 				$this->chemin = array();
+				}
+				else // Les protos dont le premier élément est un serveur (donc le chemin ne commence qu'au second).
+					array_splice($this->chemin, 2);
 			}
 		$this->fichier = substr($suiteDuCheminADecouper, $debut);
 	}
@@ -117,9 +121,9 @@ class Chemin
 		if
 		(
 			/* .. */
-			($sens == -1 && $n > 0 && $this->chemin[$n - 2] > 0)
+			($sens == -1 && $n > ($remonteeMax = 2 * $this->surServeur()) && $this->chemin[$n - 2] > 0)
 			/* ../toto (si on était déjà dans toto) */
-			|| ($n > 0 && $this->chemin[$n - 2] == -$sens && $this->chemin[$n - 1] === $nom)
+			|| ($n > $remonteeMax && $this->chemin[$n - 2] == -$sens && $this->chemin[$n - 1] === $nom)
 		)
 		{
 			array_pop($this->chemin);
@@ -129,33 +133,42 @@ class Chemin
 		
 		/* Si .., on recherche le nom du courant */
 		
-		if($nom == null && $sens == -1)
-		{
-			$chemin = $this->chemin;
-			while($sens < 0) // On remonte jusqu'à tomber sur du positif.
-			{
-				if(($n -= 2) < 0) // On a épuisé le chemin.
-				{
-					if($nom === null && $this->protocole === null) // Mais il reste peut-être encore notre $this->depuis.
-					{
-						$chemin = $this->depuis->chemin;
-						$n = count($chemin);
-						$nom = 'fini';
-					}
-					else
-						break;
-				}
-				else
-					$sens += $chemin[$n];
-			}
-			$nom = $n >= 0 ? $chemin[$n + 1] : null;
-			$sens = -1;
-		}
+		if($sens == -1) // On va vérifier que la remontée est possible.
+			if(($nom = $this->positiver($sens)) === false)
+				return; // Interdit de remonter, on n'ajoute donc pas ce .. à notre liste.
 		
 		/* Cas simple */
 		
 		$this->chemin[] = $sens;
 		$this->chemin[] = $nom;
+	}
+	
+	/* Remontant le chemin, tente d'annuler $sens.
+	 * Retour:
+	 * - false: interdiction de remonter tant que ça (au-dessus de la racine du
+	 *   système de fichiers).
+	 * - null: on peut remonter, mais on ne connaîtra jamais le nom du dossier
+	 *   duquel on sort.
+	 * - autre chose: nom du dossier dont on sort en remontant.
+	 */
+	function positiver($sens)
+	{
+		$n = count($this->chemin);
+		$remonteeMax = 2 * $this->surServeur();
+		while($sens < 0)
+		{
+			if(($n -= 2) < $remonteeMax) // On a épuisé le chemin.
+			{
+				if($this->protocole === null)
+					if($this->depuis) // Mais il reste peut-être encore notre $this->depuis.
+						return $this->depuis->positiver($sens);
+					else
+						return null;
+				return false;
+			}
+			$sens += $this->chemin[$n];
+		}
+		return $this->chemin[$n + 1];
 	}
 	
 	/*- Consultation ---------------------------------------------------------*/
@@ -230,7 +243,12 @@ class Chemin
 	 * dans $this->depuis. */
 	function absolu()
 	{
-		return ($this->protocole && !($this->absoluRelatifAuProtocole && $this->protocole == '/')) || !$this->depuis ? $this : $this->depuis->absolu()->et($this);
+		return ($this->protocole && $this->protocole != '/') || !$this->depuis ? $this : $this->depuis->absolu()->et($this);
+	}
+	
+	function surServeur()
+	{
+		return $this->protocole && !in_array($this->protocole, $GLOBALS['CheminProtosSansServeur']);
 	}
 	
 	/*- Manipulations --------------------------------------------------------*/
@@ -247,6 +265,8 @@ class Chemin
 			}
 	}
 }
+
+$GLOBALS['CheminProtosSansServeur'] = array('/', 'file:');
 
 $cheminDepart = new Chemin($_SERVER['SCRIPT_NAME']);
 
