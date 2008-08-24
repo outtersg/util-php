@@ -74,7 +74,7 @@ class Remplacant
 				copy($this->chemin, $this->chemin.'.'.$n);
 			}
 		}
-		fclose($this->l);
+		@fclose($this->l);
 		fclose($this->e);
 		if(@rename($this->chemin.'.verrou', $this->chemin))
 			return true;
