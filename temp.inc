@@ -37,9 +37,10 @@ class Remplacant
 	 * pour: l: le chemin demandé, et e: le fichier appelé à le remplacer.
 	 * Renvoie false si le verrou n'a pas pu être obtenu (un autre programme
 	 * est passé par là, et n'a pas relâché). */
-	function &Verrouille($chemin)
+	function &Verrouille($chemin, $mode = 0770)
 	{
 		$r = new Remplacant();
+		$r->mode = $mode;
 		if(class_exists('Chemin'))
 		{
 			$r->chemin = new Chemin(getcwd().'/'); // Il nous faut une référence stable pour si on change de répertoire courant.
@@ -48,8 +49,10 @@ class Remplacant
 		else
 			$r->chemin = $chemin;
 		register_shutdown_function(array(&$r, 'annuler'));
+		$umask = umask(0777 - $mode);
 		for($n = 10; !($r->e = @fopen($r->chemin.'.verrou', 'x+')) && --$n > 0;)
 			usleep(1000);
+		umask($umask);
 		if(!$r->e) return false;
 		$r->l = @fopen($r->chemin, 'r');
 		return $r;
@@ -62,7 +65,9 @@ class Remplacant
 	{
 		if($sauvegarde)
 		{
+			$umask = umask(0777 - $this->mode);
 			for($n = 0; ++$n < 0x1000 && !($sauvegarde = @fopen($this->chemin.'.'.$n, 'x+'));) {}
+			umask($umask);
 			if($sauvegarde) // Sinon tant pis, plus de place.
 			{
 				fclose($sauvegarde);
