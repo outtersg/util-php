@@ -57,7 +57,12 @@ class FichierIci extends FichierZip
 		$nomFichier = $this->chemin->et($nomFichier);
 		$nomFichier->creerDossier($this->moded);
 		if($nomFichier->fichier !== null)
+		{
 			if(!($this->fichier = @fopen($nomFichier->cheminComplet(), 'w', $this->modef))) return false;
+			$umask = umask(0);
+			@chmod($nomFichier->cheminComplet(), $this->modef);
+			umask($umask);
+		}
 		return true;
  	}
 	
