@@ -259,8 +259,10 @@ class Chemin
 		for($taille = count($this->chemin), $i = $taille; $i > 0; $i -= 2)
 			if(file_exists($this->cheminDossierJusquA($i)) === true)
 			{
+				$umask = umask(0);
 				while(($i += 2) <= $taille)
 					mkdir(substr($this->cheminDossierJusquA($i), 0, -1), $mode); // Le serveur de Free refuse de créer des répertoires si le nom contient un '/' à la fin.
+				umask($umask);
 				return;
 			}
 	}
