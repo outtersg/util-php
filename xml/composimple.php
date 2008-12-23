@@ -35,8 +35,18 @@ class CompoSimple extends Compo
 	function &entrerDans($depuis, $nom, $attributs)
 	{
 		if($this === $depuis)
+		{
+			$this->correspondances[$nom] = null;
 			return $this->correspondances[$nom];
+		}
 		return null;
+	}
+	
+	function contenuPour(&$objet, $contenu)
+	{
+		if(!isset($objet))
+			$objet = '';
+		$objet .= $contenu;
 	}
 }
 
