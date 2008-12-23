@@ -165,7 +165,7 @@ class Chargeur
 			$dernier->sortir();
 		array_pop($this->pile);
 		$courant = &$this->courant();
-		$courant->sortirDe(&$dernier);
+		$courant->sortirDe(&$dernier, $nom);
 	}
 	
 	function contenu($interprete, $chaine)
