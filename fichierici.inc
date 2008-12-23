@@ -40,7 +40,7 @@ class FichierIci extends FichierZip
 		$this->moded = false;
 		$this->modef = false;
 		$this->chemin = is_a($ou, 'chemin') ? $ou : new Chemin($ou);
-		$this->chemin->creerDossier();
+		$this->chemin->creerDossier($this->moded);
 	}
 	
 	function ajouterBloc($octets)
