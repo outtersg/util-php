@@ -35,10 +35,10 @@ class FichierIci extends FichierZip
 	/* Variables relatives au fichier en cours d'inclusion. */
 	protected $fichier;
 	
-	function FichierIci($ou)
+	function FichierIci($ou, $mode = false)
 	{
-		$this->moded = false;
-		$this->modef = false;
+		$this->moded = $mode === false ? 0755 : $mode;
+		$this->modef = $mode === false ? 0700 : $mode;
 		$this->chemin = is_a($ou, 'chemin') ? $ou : new Chemin($ou);
 		$this->chemin->creerDossier($this->moded);
 	}
@@ -57,7 +57,7 @@ class FichierIci extends FichierZip
 		$nomFichier = $this->chemin->et($nomFichier);
 		$nomFichier->creerDossier($this->moded);
 		if($nomFichier->fichier !== null)
-			if(!($this->fichier = @fopen($nomFichier->cheminComplet(), 'w', $this->modef === false ? 0700 : $this->modef))) return false;
+			if(!($this->fichier = @fopen($nomFichier->cheminComplet(), 'w', $this->modef))) return false;
 		return true;
  	}
 	
