@@ -55,6 +55,13 @@ class SSem
 		 * mémoire est lui-même protégé par un sémaphore (mais simple, celui-là,
 		 * car il ne bloque que le temps d'aller consulter la mémoire partagée).
 		 */
+		/* 'restau' est là en cas de plantage entre le moment où on inscrit la
+		 * nouvelle valeur et celui où on s'assure de retenir de combien on
+		 * voudra revenir: tant qu'on a encore le sémaphore, on se sait seuls à
+		 * manipuler, donc la restau marchera. Par contre une fois qu'on laisse
+		 * d'autres threads jouer avec, la restauration devra passer par le
+		 * recalcul (courante - ce qu'on avait ajouté). Sauf que cette chose, on
+		 * ne sait pas l'écrire atomiquement. D'où la régence du restau. */
 		if(!function_exists('sem_get') || !function_exists('shm_attach')) return 1; // Eh, que pouvons-nous faire de mieux?
 		/* On a un sémaphore PHP rapide qui contrôle l'accès à la mémoire
 		 * partagée dans laquelle une variable nous permet de gérer un bon
@@ -62,20 +69,17 @@ class SSem
 		/* À FAIRE?: utiliser en seconde étape un second sémaphore, plutôt que
 		 * de poireauter par palliers d'1 s en attendant le relâchement de la
 		 * variable partagée. */
-		/* BOGUE: possibilités de dérapage aux endroits où l'on enregistre
-		 * l'incrément apporté de façon non atomique (on fait le shm_put_var,
-		 * puis on enregistre dans notre tableau la valeur: en cas de timeout
-		 * pile entre les deux, on n'aura pas encore l'info nous permettant
-		 * de libérer juste ce qu'il faut). */
 		$id = ftok($chemin, $cle);
+		if(!($mem = $this->sems[$chemin][$cle]['mem'] = shm_attach($id, 128))) return $this->finir($chemin, $cle);
 		while(true)
 		{
-			if(!($sem = $this->sems[$chemin][$cle]['sem'] = sem_get($id))) return $this->finir($chemin, $cle);
-			if(!($mem = $this->sems[$chemin][$cle]['mem'] = shm_attach($id, 128))) return $this->finir($chemin, $cle);
+			if(!($sem = $this->assurerSemInterne($chemin, $cle))) return $this->finir($chemin, $cle);
 			if(($val = shm_get_var($mem, 0)) === false)
 			{
+				$this->sems[$chemin][$cle]['restau'] = $provision;
 				shm_put_var($mem, 0, $provision - $combien);
 				$this->sems[$chemin][$cle]['var'] = $combien;
+				unset($this->sems[$chemin][$cle]['restau']);
 				$this->finir($chemin, $cle, true);
 				return 1;
 			}
@@ -83,8 +87,10 @@ class SSem
 			{
 				if($val >= $combien)
 				{
+					$this->sems[$chemin][$cle]['restau'] = $val;
 					if(shm_put_var($mem, 0, $val - $combien) === false) return $this->finir($chemin, $cle);
 					$this->sems[$chemin][$cle]['var'] = (isset($this->sems[$chemin][$cle]['var']) ? $this->sems[$chemin][$cle]['var'] : 0) + $combien;
+					unset($this->sems[$chemin][$cle]['restau']);
 					
 					$this->finir($chemin, $cle, true);
 					return 1;
@@ -105,19 +111,24 @@ class SSem
 		return $this->attendre($chemin, $cle, 1, true, - $combien);
 	}
 	
+	function assurerSemInterne($chemin, $cle)
+	{
+		if(isset($this->sems[$chemin][$cle]['sem'])) return $this->sems[$chemin][$cle]['sem'];
+		
+		$id = ftok($chemin, $cle);
+		return $this->sems[$chemin][$cle]['sem'] = sem_get($id);
+	}
+	
 	/* Ménage interne. */
 	function finir($chemin, $cle, $maisGarder = false)
 	{
 		$infos = & $this->sems[$chemin][$cle];
-		if(!$maisGarder && isset($infos['var']))
+		if(!$maisGarder && (isset($infos['var']) || isset($infos['restau'])))
 		{
-			shm_put_var($infos['mem'], 0, shm_get_var($infos['mem'], 0) - $infos['var']);
+			$this->assurerSemInterne($chemin, $cle);
+			shm_put_var($infos['mem'], 0, isset($infos['restau']) ? $infos['restau'] : shm_get_var($infos['mem'], 0) - $infos['var']);
 			unset($infos['var']);
-		}
-		if(isset($infos['mem']))
-		{
-			shm_detach($infos['mem']);
-			unset($infos['mem']);
+			unset($infos['restau']);
 		}
 		if(isset($infos['sem']))
 		{
