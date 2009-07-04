@@ -42,11 +42,15 @@ class SSem
 	 *     Si non, la fonction renvoie 0 en cas d'indisponibilité immédiate.
 	 *   $combien
 	 *     Nombre de tickets voulus; 1 pour en réserver un, -1 pour en libérer.
+	 *   $jeSuisUneRestau
+	 *     Si true, l'appel est déjà une restauration; SSem n'installera pas de
+	 *     quoi gérer un retour en arrière en cas d'erreur inopinée (puisque
+	 *     justement nous sommes ce retour en arrière).
 	 * Retour:
 	 *   -1 en cas d'erreur, 0 si l'appelant ne veut pas bloquer mais n'obtient
 	 *   pas le sémaphore, 1 si le sémaphore est acquis.
 	 */
-	function attendre($chemin, $cle = '', $provision = 1, $bloquant = true, $combien = 1)
+	function attendre($chemin, $cle = '', $provision = 1, $bloquant = true, $combien = 1, $jeSuisUneRestau = false)
 	{
 		/* Gros inconvénient du sémaphore à la PHP: pas moyen de faire un
 		 * sem_trywait. À nous de l'émuler donc, avec une horreur de variable
@@ -78,7 +82,7 @@ class SSem
 			{
 				$this->sems[$chemin][$cle]['restau'] = $provision;
 				shm_put_var($mem, 0, $provision - $combien);
-				$this->sems[$chemin][$cle]['var'] = $combien;
+				$jeSuisUneRestau || $this->sems[$chemin][$cle]['var'] = $combien;
 				unset($this->sems[$chemin][$cle]['restau']);
 				$this->finir($chemin, $cle, true);
 				return 1;
@@ -87,8 +91,11 @@ class SSem
 			{
 				if($val >= $combien)
 				{
-					$this->sems[$chemin][$cle]['restau'] = $val;
+					$this->sems[$chemin][$cle]['restau'] = $jeSuisUneRestau ? $val - $combien : $val;
 					if(shm_put_var($mem, 0, $val - $combien) === false) return $this->finir($chemin, $cle);
+					if($jeSuisUneRestau)
+						unset($this->sems[$chemin][$cle]['var']);
+					else
 					$this->sems[$chemin][$cle]['var'] = (isset($this->sems[$chemin][$cle]['var']) ? $this->sems[$chemin][$cle]['var'] : 0) + $combien;
 					unset($this->sems[$chemin][$cle]['restau']);
 					
@@ -108,7 +115,7 @@ class SSem
 	
 	function liberer($chemin, $cle = '', $combien = 1)
 	{
-		return $this->attendre($chemin, $cle, 1, true, - $combien);
+		return $this->attendre($chemin, $cle, 1, true, - $combien, true);
 	}
 	
 	function assurerSemInterne($chemin, $cle)
@@ -126,7 +133,7 @@ class SSem
 		if(!$maisGarder && (isset($infos['var']) || isset($infos['restau'])))
 		{
 			$this->assurerSemInterne($chemin, $cle);
-			shm_put_var($infos['mem'], 0, isset($infos['restau']) ? $infos['restau'] : shm_get_var($infos['mem'], 0) - $infos['var']);
+			shm_put_var($infos['mem'], 0, isset($infos['restau']) ? $infos['restau'] : shm_get_var($infos['mem'], 0) + $infos['var']);
 			unset($infos['var']);
 			unset($infos['restau']);
 		}
