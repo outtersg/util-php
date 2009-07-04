@@ -74,10 +74,11 @@ class SSem
 		 * de poireauter par palliers d'1 s en attendant le relâchement de la
 		 * variable partagée. */
 		$id = ftok($chemin, $cle);
+		if(($this->sems[$chemin][$cle]['sem'] = sem_get($id)) === false) return $this->finir($chemin, $cle);
 		if(!($mem = $this->sems[$chemin][$cle]['mem'] = shm_attach($id, 128))) return $this->finir($chemin, $cle);
 		while(true)
 		{
-			if(!($sem = $this->assurerSemInterne($chemin, $cle))) return $this->finir($chemin, $cle);
+			if(!$this->assurerSemInterne($chemin, $cle)) return $this->finir($chemin, $cle);
 			if(($val = shm_get_var($mem, 0)) === false)
 			{
 				$this->sems[$chemin][$cle]['restau'] = $provision;
@@ -120,10 +121,11 @@ class SSem
 	
 	function assurerSemInterne($chemin, $cle)
 	{
-		if(isset($this->sems[$chemin][$cle]['sem'])) return $this->sems[$chemin][$cle]['sem'];
+		if(isset($this->sems[$chemin][$cle]['semacq'])) return true;
 		
-		$id = ftok($chemin, $cle);
-		return $this->sems[$chemin][$cle]['sem'] = sem_get($id);
+		if(sem_acquire($this->sems[$chemin][$cle]['sem']))
+			return $this->sems[$chemin][$cle]['semacq'] = true;
+		return false;
 	}
 	
 	/* Ménage interne. */
@@ -137,10 +139,10 @@ class SSem
 			unset($infos['var']);
 			unset($infos['restau']);
 		}
-		if(isset($infos['sem']))
+		if(isset($infos['semacq']))
 		{
 			sem_release($infos['sem']);
-			unset($infos['sem']);
+			unset($infos['semacq']);
 		}
 		return -1;
 	}
