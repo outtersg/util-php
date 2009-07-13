@@ -270,6 +270,7 @@ class Chemin
 
 $GLOBALS['CheminProtosSansServeur'] = array('/', 'file:');
 
+$cheminDepart = null; // Juste histoire qu'il soit défini pour servir de départ à $cheminDepart.
 $cheminDepart = new Chemin($_SERVER['SCRIPT_NAME']);
 
 /*
