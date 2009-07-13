@@ -32,7 +32,7 @@ class CompoSimple extends Compo
 		$this->correspondances = $correspondances;
 	}
 	
-	function &entrerDans($depuis, $nom, $attributs)
+	function &entrerDans(&$depuis, $nom, $attributs)
 	{
 		if($this === $depuis)
 		{

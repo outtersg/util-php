@@ -26,7 +26,7 @@ $id_compo = 0;
 class Compo
 {
 	function entrer() {}
-	function &entrerDans($depuis, $nom, $attributs) {}
+	function &entrerDans(&$depuis, $nom, $attributs) {}
 	function contenuPour(&$objet, $contenu) {}
 	function sortirDe(&$objet) {}
 	function sortir() {}

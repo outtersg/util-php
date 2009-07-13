@@ -195,7 +195,7 @@ class GobeurRacine extends Compo
 		$this->racineCompo = &$destination;
 	}
 	
-	function &entrerDans($depuis, $nom, $attributs)
+	function &entrerDans(&$depuis, $nom, $attributs)
 	{
 		if($nom == $this->nomRacine)
 			return $this->racineCompo;
