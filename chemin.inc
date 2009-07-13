@@ -60,7 +60,7 @@ class Chemin
 	function et($chemin)
 	{
 		$r = clone $this;
-		if(is_a($chemin, Chemin))
+		if($chemin instanceof Chemin)
 		{
 			if($chemin->protocole === '/' && $r->protocole !== null && $r->protocole !== '/') // Un protocole façon URL passe devant un chemin absolu.
 				$r->chemin = array_slice($r->chemin, 0, 2);
