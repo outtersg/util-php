@@ -97,7 +97,7 @@ class Navigateur
 			$GLOBALS['navigateur_recuperateurEnTetes'] = &$this;
 			curl_setopt($c, CURLOPT_HEADERFUNCTION, 'navigateur_recupEnTete');
 			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-			if($this->auth)
+			if(isset($this->auth))
 			{
 				curl_setopt($c, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 				curl_setopt($c, CURLOPT_USERPWD, $this->auth); // id:mdp
