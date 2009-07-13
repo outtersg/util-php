@@ -41,7 +41,7 @@ class Date
 
 /*- Débogage -----------------------------------------------------------------*/
 
-function aff_tableau($tableau)
+static function aff_tableau($tableau)
 {
 	$machin = '';
 	for($i = 0; $i < count($tableau); ++$i)
@@ -50,8 +50,8 @@ function aff_tableau($tableau)
 	return $machin;
 }
 
-function date_affichage_tableau($tableau) { return Date::aff($tableau); }
-function aff($tableau)
+static function date_affichage_tableau($tableau) { return Date::aff($tableau); }
+static function aff($tableau)
 {
 	$masque = 0;
 	
@@ -92,7 +92,7 @@ function aff($tableau)
 	return $jour.($masque == 3 ? ' ' : '').$heure;
 }
 
-function date_affichage($date)
+static function date_affichage($date)
 {
 	return strftime('%Y-%m-%d %H:%M:%S', $date);
 }
@@ -102,12 +102,12 @@ function date_affichage($date)
 static $g_nomChamps = array('heures', 'minutes', 'secondes');
 static $g_chiffres = '0123456789';
 
-function lire($date)
+static function lire($date)
 {
 	return Date::lireHeure($date, true);
 }
 
-function lireHeure($date, $tenterAussiLaDate)
+static function lireHeure($date, $tenterAussiLaDate)
 {
 	$retour = array();
 	$fin = strlen($date);
@@ -233,7 +233,7 @@ function lireHeure($date, $tenterAussiLaDate)
 	return ($tenterAussiLaDate ? Date::assembler($fin > 0 ? Date::lireJour(substr($date, 0, $fin)) : array(null, null, null), $rangement) : $rangement);
 }
 
-function lireJour($date)
+static function lireJour($date)
 {
 	if(strlen($date) == 0) return array(null, null, null);
 	
@@ -308,7 +308,7 @@ function lireJour($date)
 	return $valeurs;
 }
 
-function assembler($tabDate, $tabHoraire)
+static function assembler($tabDate, $tabHoraire)
 {
 	if($tabDate == null || $tabHoraire == null) return null;
 	for($i = 0; $i < count($tabHoraire); ++$i)
@@ -319,7 +319,7 @@ function assembler($tabDate, $tabHoraire)
 
 /*- Calculs sur tableaux de dates --------------------------------------------*/
 
-function completer($original, $avec)
+static function completer($original, $avec)
 {
 	if($original == null) return $avec;
 	if($avec == null) return $original;
@@ -330,7 +330,7 @@ function completer($original, $avec)
 }
 
 /* Enlève de $date les éléments déjà présents dans $reference. */
-function decompleter($date, $reference)
+static function decompleter($date, $reference)
 {
 	if(!$date || !$reference)
 		return $date;
@@ -342,7 +342,7 @@ function decompleter($date, $reference)
 	return $date;
 }
 
-function calculer($chose)
+static function calculer($chose)
 {
 	/* Un mktime avec des null, ça ne va pas être terrible. */
 	if($chose == null || in_array(null, $chose))
@@ -350,15 +350,15 @@ function calculer($chose)
 	return mktime($chose[3], $chose[4], $chose[5], $chose[1], $chose[2], $chose[0] >= 0 ? $chose[0] : 0);
 }
 
-function obtenir_datation($secondes) { return Date::obtenir($secondes); }
-function obtenir($secondes)
+static function obtenir_datation($secondes) { return Date::obtenir($secondes); }
+static function obtenir($secondes)
 {
 	$t = getdate($secondes);
 	return array($t['year'], $t['mon'], $t['mday'], $t['hours'], $t['minutes'], $t['seconds']);
 }
 
 /* Transforme les 32 janvier en 1er février, etc. */
-function corriger($chose)
+static function corriger($chose)
 {
 	/* calculer_datation remplaçant nos indéfinis, il faudra les remettre en
 	 * place à posteriori. */
@@ -375,7 +375,7 @@ function corriger($chose)
 /* Renvoie un nombre inférieur, égal ou supérieur à 0 selon que le premier
  * paramètre est gnagnagna, gnagnagna ou gnagnagna blabla. Ne fonctionne pas
  * forcément si vous laissez trop de trous dans vos dates. */
-function comparer($d0, $d1)
+static function comparer($d0, $d1)
 {
 	if($d0 === null)
 		if($d1 === null)
@@ -394,7 +394,7 @@ function comparer($d0, $d1)
 	return 0;
 }
 
-function moins($date, $moins)
+static function moins($date, $moins)
 {
 	foreach($date as $i => $e)
 		if($e !== null && array_key_exists($i, $moins) && $moins[$i] !== null)
@@ -407,7 +407,7 @@ function moins($date, $moins)
 
 /*- Tests --------------------------------------------------------------------*/
 
-function tester_decoupage_datation()
+static function tester_decoupage_datation()
 {
 	$tests = array
 	(
@@ -426,7 +426,7 @@ function tester_decoupage_datation()
 		afficher_test_decoupage_datation($tests[$y]);
 }
 
-function afficher_test_decoupage_datation($date)
+static function afficher_test_decoupage_datation($date)
 {
 	$tableau = decouper_datation($date);
 	if($tableau != null)
@@ -439,7 +439,7 @@ function afficher_test_decoupage_datation($date)
 
 /*- Compatibilité ------------------------------------------------------------*/
 
-function mef($date)
+static function mef($date)
 {
 	for($i = 6; --$i >= 0;)
 		if($date[$i] < 0)
@@ -447,7 +447,7 @@ function mef($date)
 	return $date;
 }
 
-function fem($date)
+static function fem($date)
 {
 	for($i = 6; --$i >= 0;)
 		if($date[$i] === null)
