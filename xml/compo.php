@@ -28,7 +28,7 @@ class Compo
 	function entrer() {}
 	function &entrerDans(&$depuis, $nom, $attributs) {}
 	function contenuPour(&$objet, $contenu) {}
-	function sortirDe(&$objet) {}
+	function sortirDe(&$objet, $nom) {}
 	function sortir() {}
 }
 

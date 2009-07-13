@@ -44,7 +44,7 @@ class XmlFiltre extends Compo
 		$this->sortie->contenu($contenu);
 	}
 	
-	function sortirDe(&$objet)
+	function sortirDe(&$objet, $nom)
 	{
 		$this->sortie->sortir();
 	}
