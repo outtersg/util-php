@@ -37,7 +37,7 @@ class Remplacant
 	 * pour: l: le chemin demandé, et e: le fichier appelé à le remplacer.
 	 * Renvoie false si le verrou n'a pas pu être obtenu (un autre programme
 	 * est passé par là, et n'a pas relâché). */
-	function &Verrouille($chemin, $mode = 0770)
+	static function &Verrouille($chemin, $mode = 0770)
 	{
 		$r = new Remplacant();
 		$r->mode = $mode;
