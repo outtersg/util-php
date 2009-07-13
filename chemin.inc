@@ -121,7 +121,7 @@ class Chemin
 		if
 		(
 			/* .. */
-			($sens == -1 && $n > ($remonteeMax = 2 * $this->surServeur()) && $this->chemin[$n - 2] > 0)
+			($n > ($remonteeMax = 2 * $this->surServeur()) && $sens == -1 && $this->chemin[$n - 2] > 0)
 			/* ../toto (si on était déjà dans toto) */
 			|| ($n > $remonteeMax && $this->chemin[$n - 2] == -$sens && $this->chemin[$n - 1] === $nom)
 		)
