@@ -23,6 +23,16 @@
 
 class SSem
 {
+	static public function I()
+	{
+		if(!isset(self::$instance))
+		{
+			$classe = get_class();
+			self::$instance = new $classe();
+		}
+		return self::$instance;
+	}
+	
 	function SSem()
 	{
 		register_shutdown_function(array(&$this, 'sortir'));
@@ -159,6 +169,8 @@ class SSem
 	{
 		return SSem::attendre($chemin, $cle, $provision, false);
 	}
+	
+	static protected $instance;
 }
 
 ?>
