@@ -75,7 +75,7 @@ class SSem
 		 * variable partagée. */
 		$id = ftok($chemin, $cle);
 		if(($this->sems[$chemin][$cle]['sem'] = sem_get($id)) === false) return $this->finir($chemin, $cle);
-		if(!($mem = $this->sems[$chemin][$cle]['mem'] = shm_attach($id, 128))) return $this->finir($chemin, $cle);
+		if(!(isset($this->sems[$chemin][$cle]['mem']) && ($mem = $this->sems[$chemin][$cle]['mem'])) && !($mem = $this->sems[$chemin][$cle]['mem'] = shm_attach($id, 128))) return $this->finir($chemin, $cle);
 		while(true)
 		{
 			if(!$this->assurerSemInterne($chemin, $cle)) return $this->finir($chemin, $cle);
