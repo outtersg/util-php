@@ -32,7 +32,7 @@ class XmlFiltre extends Compo
 		$this->sortie->commencer($sortie);
 	}
 	
-	function &entrerDans($depuis, $nom, $attributs)
+	function &entrerDans(&$depuis, $nom, $attributs)
 	{
 		$this->sortie->entrer($nom);
 		foreach($attributs as $attr => $val)
