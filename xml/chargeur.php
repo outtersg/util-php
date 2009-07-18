@@ -99,7 +99,7 @@ class Chargeur
 			if($posFermeture > 0) // Si on trouve une occasion de césure.
 			{
 				$aFaire = $posFermeture == $taille ? $donnees : substr($donnees, 0, $posFermeture);
-				if(!xml_parse($interprete, $mem === null ? $aFaire : $mem.$aFaire, $fin))
+				if(!xml_parse($interprete, !isset($mem) ? $aFaire : $mem.$aFaire, $fin))
 					if($fatal)
 						die(sprintf('Erreur XML: %s, ligne %d: %s', $chemin, xml_get_current_line_number($interprete), xml_error_string(xml_get_error_code($interprete))));
 					else
