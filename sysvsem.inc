@@ -89,7 +89,7 @@ class SSem
 		while(true)
 		{
 			if(!$this->assurerSemInterne($chemin, $cle)) return $this->finir($chemin, $cle);
-			if(($val = shm_get_var($mem, 0)) === false)
+			if(($val = @shm_get_var($mem, 0)) === false)
 			{
 				$this->sems[$chemin][$cle]['restau'] = $provision;
 				shm_put_var($mem, 0, $provision - $combien);
