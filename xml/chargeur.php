@@ -49,7 +49,7 @@ class Chargeur
 	function charger($chemin, $nomRacine, &$traiteurRacine, $fatal = false)
 	{
 		$r = true;
-		if(is_a($chemin, Chemin)) $chemin = $chemin->cheminComplet();
+		if($chemin instanceof Chemin) $chemin = $chemin->cheminComplet();
 		
 		if(!($fichier = @fopen($chemin, 'r')))
 			if($fatal)
@@ -122,7 +122,7 @@ class Chargeur
 	function chargerSansGroupage($chemin, $nomRacine, &$traiteurRacine, $fatal = false)
 	{
 		$r = true;
-		if(is_a($chemin, Chemin)) $chemin = $chemin->cheminComplet();
+		if($chemin instanceof Chemin) $chemin = $chemin->cheminComplet();
 		
 		if(!($fichier = @fopen($chemin, 'r')))
 			if($fatal)
@@ -154,14 +154,14 @@ class Chargeur
 		$courant = &$this->courant();
 		$resultat = &$courant->entrerDans(&$this->pile[count($this->pile)-1], $nom, $attrs);
 		$this->pile[] = &$resultat;
-		if(is_a($resultat, Compo))
+		if($resultat instanceof Compo)
 			$resultat->entrer();
 	}
 	
 	function sortir($interprete, $nom)
 	{
 		$dernier = &$this->pile[count($this->pile)-1];
-		if(is_a(&$dernier, Compo))
+		if($dernier instanceof Compo)
 			$dernier->sortir();
 		array_pop($this->pile);
 		$courant = &$this->courant();
@@ -179,7 +179,7 @@ class Chargeur
 	function &courant()
 	{
 		for($i = count($this->pile); (--$i) >= 0;)
-			if(is_a($this->pile[$i], Compo))
+			if($this->pile[$i] instanceof Compo)
 				return $this->pile[$i];
 	}
 }
