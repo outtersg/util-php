@@ -39,7 +39,7 @@ class FichierIci extends FichierZip
 	{
 		$this->moded = $mode === false ? 0755 : $mode;
 		$this->modef = $mode === false ? 0700 : $mode;
-		$this->chemin = is_a($ou, 'chemin') ? $ou : new Chemin($ou);
+		$this->chemin = $ou instanceof Chemin ? $ou : new Chemin($ou);
 		$this->chemin->creerDossier($this->moded);
 	}
 	
