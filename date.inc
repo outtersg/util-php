@@ -450,7 +450,7 @@ static function mef($date)
 static function fem($date)
 {
 	for($i = 6; --$i >= 0;)
-		if($date[$i] === null)
+		if(!isset($date[$i]))
 			$date[$i] = -1;
 	return $date;
 }
