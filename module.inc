@@ -33,7 +33,7 @@
  */
 function module_liste($cheminDossier, $type, $suffixe = '.inc')
 {
-	if(is_a($cheminDossier, Chemin)) $cheminDossier = $cheminDossier->cheminComplet();
+	if($cheminDossier instanceof Chemin) $cheminDossier = $cheminDossier->cheminComplet();
 	
 	$dossier = opendir($cheminDossier);
 	$liste = array();
