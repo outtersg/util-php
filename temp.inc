@@ -104,7 +104,7 @@ class Remplacant
 		}
 		@fclose($this->l);
 		fclose($this->e);
-		if(@rename($this->chemin.'.verrou', $this->chemin))
+		if(posix_rename($this->chemin.'.verrou', $this->chemin))
 			return true;
 		@unlink($this->chemin.'.verrou');
 		return false;
