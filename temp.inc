@@ -31,6 +31,34 @@ function temp_nouveau($cheminDossier, $suffixe)
 	return $numero;
 }
 
+$GLOBALS['temp_renames'] = null;
+function temp_finir_renames()
+{
+	$r = true;
+	foreach($GLOBALS['temp_renames'] as $num => $d)
+	{
+		@unlink($d[1]);
+		if(!rename($d[0], $d[1])) $r = false;
+		unset($GLOBALS['temp_renames'][$num]);
+	}
+	return $r;
+}
+
+function posix_rename($source, $dest)
+{
+	if(!@rename($source, $dest))
+	{
+		if(!isset($GLOBALS['temp_renames']))
+		{
+			$GLOBALS['temp_renames'] = array();
+			register_shutdown_function('temp_finir_renames'); // Ça nous assure un semblant d'atomicité. Enfin je crois.
+		}
+		$GLOBALS['temp_renames'][] = array($source, $dest);
+		return temp_finir_renames();
+	}
+	return true;
+}
+
 class Remplacant
 {
 	/* Renvoie un objet Temp, dont les membres sont les fichiers préouverts
