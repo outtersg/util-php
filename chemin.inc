@@ -268,6 +268,30 @@ class Chemin
 	}
 }
 
+function detruireChemin($chemin)
+{
+	/* On assainit. */
+	
+	$chemin instanceof Chemin && $chemin = $chemin->cheminComplet();
+	while(substr($chemin, -1) == '/') $chemin = substr($chemin, 0, -1);
+	
+	/* On analyse. */
+	
+	if(is_link($chemin) || !is_dir($chemin))
+		return unlink($chemin);
+	else
+	{
+		$d = opendir($chemin);
+		while(($c = readdir($d)))
+		{
+			if($c == '.' || $c == '..') continue;
+			detruireChemin($chemin.'/'.$c);
+		}
+		closedir($d);
+		rmdir($chemin);
+	}
+}
+
 $GLOBALS['CheminProtosSansServeur'] = array('/', 'file:');
 
 $cheminDepart = null; // Juste histoire qu'il soit défini pour servir de départ à $cheminDepart.
