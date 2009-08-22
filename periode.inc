@@ -27,7 +27,7 @@ require_once('date.inc');
 
 /*- Affichage ----------------------------------------------------------------*/
 
-function periode_aff($entre, $et, $mode = 0) { return Periode::aff(Date::fem($entre), Date::fem($et), $mode); }
+function periode_aff($entre, $et, $mode = 0) { return Periode::aff(Date::mef($entre), Date::mef($et), $mode); }
 
 function periode_affDate($date, $mode = 0)
 {
