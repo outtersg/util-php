@@ -130,7 +130,7 @@ class Periode
 	
 	static public $UNITES = array(false, false, false, 'h', 'mn', 's');
 	
-	function aff($entre, $et, $mode = 0)
+	static function aff($entre, $et, $mode = 0)
 	{
 		$b2 = $b1 = ''; // Blocs présents dans les dates; une fois déterminés, on tentera de les réduire pour en afficher le minimum.
 		
@@ -216,12 +216,12 @@ class Periode
 		return $aff;
 	}
 	
-	function affDate($d, $mode)
+	static function affDate($d, $mode)
 	{
 		return periode_affDate(Date::fem($d), $mode);
 	}
 	
-	function testsAff()
+	static function testsAff()
 	{
 		$tests = array
 		(
