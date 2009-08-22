@@ -88,8 +88,24 @@ class Remplacant
 	
 	/* Termine la transaction demandée dans Verrouille(), en effectuant le
 	 * remplacement. Si demandé, sauvegarde l'ancien fichier sous un nom avec
-	 * suffixe numérique. */
-	function remplacer($sauvegarde = false)
+	 * suffixe numérique.
+	 * Paramètres:
+	 *   $sauvegarde
+	 *     Créer une sauvegrde de l'ancien fichier, à côté de celui qu'on va
+	 *     remplacer. Mentionner un md5 ici indique de ne sauvegarder que si le
+	 *     fichier n'a pas ce md5 (ex.: si l'on fait plusieurs modifications
+	 *     successives, on retiendra entre chacune le md5 du fichier juste
+	 *     écrit; de cette façon, à moins qu'un processus tierce ne le modifie,
+	 *     on ne sauvegardera pas nos étapes).
+	 *   $garderLaMain
+	 *     En fait, conserver le verrou et se préparer à réécrire le fichier
+	 *     dans pas longtemps (il faudra donc appeler un vrai remplacer un de
+	 *     ces jours).
+	 * Retour:
+	 *     si $sauvegarde était une chaîne (md5 de l'ancien fichier), md5 du
+	 *     nouveau fichier écrit; sinon true ou false.
+	 */
+	function remplacer($sauvegarde = false, $garderLaMain = false)
 	{
 		$retour = is_bool($sauvegarde);
 		if(!is_bool($sauvegarde)) // Un md5, on regarde ce qu'on a de beau dans le fichier pour décider de le sauvegarder ou non.
@@ -104,11 +120,31 @@ class Remplacant
 				fclose($sauvegarde);
 				copy($this->chemin, $this->chemin.'.'.$n);
 			}
+			$this->dejaSauvegarde = true;
+		}
+		if(!$retour)
+			$retour = md5(stream_get_contents($this->e, -1, 0)); // On calcule maintenant la valeur du nouveau md5, parce qu'on a un descripteur de fichier ouvert dessus et c'est pratique. Certes, on aura fait ce calcul pour rien si finalement on renvoie false, mais ce n'est pas le cas nominal.
+		if($garderLaMain)
+		{
+			if(!fflush($this->e)) return false;
+			/* On remplace, mais sans lâcher notre verrou: on passe donc par à côté. */
+			if(!($temp = tempnam(dirname($this->chemin), 'temp.'))) return false;
+			if(!copy($this->chemin.'.verrou', $temp)) { @unlink($temp); return false; }
+			if(!posix_rename($temp, $this->chemin)) return false;
+			/* On se prépare à générer à nouveau le fichier. */
+			if(!ftruncate($this->e, 0)) return false;
+			if(!rewind($this->e)) return false;
+			fclose($this->l);
+			if(!($this->l = fopen($this->chemin, 'r'))) return false;
+			return $retour;
 		}
 		@fclose($this->l);
 		fclose($this->e);
 		if(posix_rename($this->chemin.'.verrou', $this->chemin))
-			return true;
+		{
+			unset($this->dejaSauvegarde); // La prochaine itération aura à sauvegarder le fichier que l'on clôt maintenant, car on le considère suffisamment définitif pour le mériter.
+			return $retour;
+		}
 		@unlink($this->chemin.'.verrou');
 		return false;
 	}
