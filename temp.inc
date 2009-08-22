@@ -91,7 +91,10 @@ class Remplacant
 	 * suffixe numérique. */
 	function remplacer($sauvegarde = false)
 	{
-		if($sauvegarde)
+		$retour = is_bool($sauvegarde);
+		if(!is_bool($sauvegarde)) // Un md5, on regarde ce qu'on a de beau dans le fichier pour décider de le sauvegarder ou non.
+			$sauvegarde = isset($this->dejaSauvegarde) ? false : (md5(stream_get_contents($this->l, -1, 0)) != $sauvegarde);
+		if($sauvegarde && !isset($this->dejaSauvegarde))
 		{
 			$umask = umask(0777 - $this->mode);
 			for($n = 0; ++$n < 0x1000 && !($sauvegarde = @fopen($this->chemin.'.'.$n, 'x+'));) {}
