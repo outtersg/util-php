@@ -294,8 +294,8 @@ function detruireChemin($chemin)
 
 $GLOBALS['CheminProtosSansServeur'] = array('/', 'file:');
 
-$cheminDepart = null; // Juste histoire qu'il soit défini pour servir de départ à $cheminDepart.
-$cheminDepart = new Chemin($_SERVER['SCRIPT_NAME']);
+$GLOBALS['cheminDepart'] = null; // Juste histoire qu'il soit défini pour servir de départ à $cheminDepart.
+$GLOBALS['cheminDepart'] = $cheminDepart = new Chemin($_SERVER['SCRIPT_NAME']);
 
 /*
 $racine = new Chemin('http://www.apple.com/');
