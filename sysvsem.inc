@@ -165,12 +165,32 @@ class SSem
 				$this->finir($chemin, $cle);
 	}
 	
+	/* Ménage brutal. */
+	function detruire($chemin, $cle)
+	{
+		$infos = & $this->sems[$chemin][$cle];
+		if(isset($infos['mem']))
+		{
+			shm_remove($infos['mem']);
+			unset($infos['mem']);
+			unset($infos['var']);
+			unset($infos['restau']);
+		}
+		if(isset($infos['sem']))
+		{
+			sem_remove($infos['sem']);
+			unset($infos['sem']);
+			unset($infos['semacq']);
+		}
+	}
+	
 	function tenter($chemin, $cle = '', $provision = 1)
 	{
 		return SSem::attendre($chemin, $cle, $provision, false);
 	}
 	
 	static protected $instance;
+	protected $sems = array();
 }
 
 ?>
