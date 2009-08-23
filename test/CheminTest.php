@@ -77,6 +77,23 @@ class CheminTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals('./', $chem->cheminDossier());
 		$GLOBALS['cheminDepart'] = $cheminDepart;
 	}
+	
+	function testDepuisEnAbsolu()
+	{
+		$racine0 = new Chemin('/tmp/blabla/');
+		$racine1 = new Chemin('/tmp/blabla/choses/');
+		$chem0 = new Chemin('../truc/', $racine0);
+		$chem2 = new Chemin('bidule/', $racine1);
+		$this->assertEquals('../blabla/choses/bidule/', $chem2->cheminDepuis($chem0)->cheminComplet());
+	}
+	
+	function testDepuisEnAbsoluDoubleEtage()
+	{
+		$racine0 = new Chemin('/Users/moi/blibedubop/');
+		$racine1 = new Chemin('/var/tmp/', $racine0);
+		$chem = new Chemin('test57/', $racine1);
+		$this->assertEquals('../../../Users/moi/blibedubop/', $racine0->cheminDepuis($chem)->cheminComplet());
+	}
 }
 
 ?>
