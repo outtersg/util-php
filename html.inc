@@ -93,7 +93,7 @@ function html_session()
 		@ini_set("session.use_cookies", false);
 		@ini_set("session.use_trans_sid", true);
 	} catch(Exception $e) {}
-	session_start();
+	@session_start();
 }
 
 /*- Éléments d'interface -----------------------------------------------------*/
