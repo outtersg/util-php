@@ -52,9 +52,19 @@ function params_decomposer($nom, $tableau, $mode = 0)
 	else
 	{
 		$retour = '';
+		/* On essaie de savoir si on a droit à la version simplifiée [] (il faut que notre tableau soit numérique, ordonné, et au plus profond d'une imbrication). */
+		$numerique = true;
+		$n = -1;
+		foreach($tableau as $cle => $valeur)
+			if($cle != ++$n || is_array($valeur))
+			{
+				$numerique = false;
+				break;
+			}
+		/* Parcours. */
 		foreach($tableau as $cle => $valeur)
 		{
-			$nomCompose = $nom === null ? $cle : $nom.'['.$cle.']';
+			$nomCompose = $nom === null ? $cle : $nom.'['.($numerique ? '' : $cle).']';
 			if(is_array($valeur))
 				$retour .= params_decomposer($nomCompose, $valeur, $mode);
 			else
