@@ -39,7 +39,8 @@ class CompoSimple extends Compo
 			$this->correspondances[$nom] = null;
 			return $this->correspondances[$nom];
 		}
-		return null;
+		$r = null;
+		return $r;
 	}
 	
 	function contenuPour(&$objet, $contenu)
