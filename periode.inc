@@ -97,7 +97,16 @@ function periode_affDate($date, $mode = 0)
 		$total .= ($total ? ' ' : '').($mode == Periode::$REDIGE ? 'à ' : '').$hms;
 	
 	if($mode == Periode::$REDIGE && $date[2] >= 0)
-		$total = 'le '.$total;
+	{
+		if ($date[1] < 0 && $date[0] < 0)
+		{
+			$date = localtime(mktime(0, 0, 0, date('n'), $date[2]));
+			$jours = array('dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi');
+			$total = $jours[$date[6]].' '.$total;
+		}
+		else
+			$total = 'le '.$total;
+	}
 	return $total;
 }
 
