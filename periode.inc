@@ -29,7 +29,7 @@ require_once('date.inc');
 
 function periode_aff($entre, $et, $mode = 0) { return Periode::aff(Date::mef($entre), Date::mef($et), $mode); }
 
-function periode_affDate($date, $mode = 0)
+function periode_affDate($date, $mode = 0, $tableau = false)
 {
 	$total = null;
 	$lettres = in_array($mode, array(Periode::$ECRIT, Periode::$REDIGE));
@@ -93,8 +93,14 @@ function periode_affDate($date, $mode = 0)
 	}
 	}
 	
+	$res = array('date' => $total);
 	if($hms)
-		$total .= ($total ? ' ' : '').($mode == Periode::$REDIGE ? 'à ' : '').$hms;
+	{
+		if($total)
+			$res[] = ' ';
+		$res[] = $mode == Periode::$REDIGE ? 'à ' : '';
+		$res['heure'] = $hms;
+	}
 	
 	if($mode == Periode::$REDIGE && $date[2] >= 0)
 	{
@@ -102,12 +108,12 @@ function periode_affDate($date, $mode = 0)
 		{
 			$date = localtime(mktime(0, 0, 0, date('n'), $date[2]));
 			$jours = array('dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi');
-			$total = $jours[$date[6]].' '.$total;
+			array_unshift($res, $jours[$date[6]].' ');
 		}
 		else
-			$total = 'le '.$total;
+			array_unshift($res, 'le ');
 	}
-	return $total;
+	return $tableau ? $res : implode('', $res);
 }
 
 /*- Calcul -------------------------------------------------------------------*/
@@ -139,7 +145,7 @@ class Periode
 	
 	static public $UNITES = array(false, false, false, 'h', 'mn', 's');
 	
-	static function aff($entre, $et, $mode = 0)
+	static function aff($entre, $et, $mode = 0, $tableau = false)
 	{
 		$b2 = $b1 = ''; // Blocs présents dans les dates; une fois déterminés, on tentera de les réduire pour en afficher le minimum.
 		
@@ -187,10 +193,11 @@ class Periode
 		/* Affichage. */
 		
 		$blocs = array();
+		$types = array();
+		$nDates = 0;
 		foreach(array($entre, $et) as $n => $d)
 			if(($b1 = $b[$n]))
 			{
-				$b2 = array();
 				if(strpos($b1, '_') === false)
 					$b1 = '_'.$b1;
 				for($z = 0; $z < strlen($b1); ++$z)
@@ -198,7 +205,8 @@ class Periode
 					switch($b1{$z})
 					{
 						case '_':
-							$b2[] = '_';
+							$blocs[] = $mode == Periode::$REDIGE ? ($nDates ? '_ à ' : '_ de ') : ($nDates ? '_ - ' : '');
+							$types[] = 0;
 							continue 2;
 						case 'T': $entre = 0; $et = 5; break;
 						case 'J': $entre = 0; $et = 2; break;
@@ -209,25 +217,70 @@ class Periode
 					$d2 = array(null, null, null, null, null, null);
 					for(; $entre <= $et; ++$entre)
 						$d2[$entre] = $d[$entre];
-					$b2[] = Periode::affDate($d2, $mode);
+					$elements = Periode::affDate($d2, $mode, true);
+					$blocs = array_merge($blocs, array_values($elements));
+					$types = array_merge($types, array_keys($elements));
+					$blocs[] = ' ';
+					$types[] = 0;
 				}
-				$blocs[] = join(' ', $b2);
+				++$nDates;
 			}
 		foreach($blocs as $n => $b)
-			$blocs[$n] = strtr($b, array('_' => (count($blocs) == 1 ? '' : ($mode == Periode::$REDIGE ? ($n ? 'à' : 'de') : ($n ? '-' : '')))));
-		$aff = implode(' ', $blocs);
+			$blocs[$n] = strtr($b, $nDates == 1 ? array('_ à ' => '', '_ de ' => '', '_ - ' => '') : array('_' => ''));
+		// Suppression des blocs vides.
+		for($i = count($types); --$i >= 0;)
+		{
+			if(!strlen($blocs[$i]))
+			{
+				array_splice($blocs, $i, 1);
+				array_splice($types, $i, 1);
+			}
+		}
+		// Concaténation des blocs textuels.
+		for($i = count($types); --$i >= 0;)
+		{
+			if(is_int($types[$i])) // Indique que le bloc est un texte de liaison entre deux éléments un peu plus significatifs.
+			{
+				for($j = $i; --$i >= 0 && is_int($types[$i]);) {}
+				++$i;
+				if($i < $j)
+				{
+					array_splice($blocs, $i, $j - $i + 1, array(Periode::tasser(implode('', array_slice($blocs, $i, $j - $i + 1)), $mode)));
+					array_splice($types, $i, $j - $i);
+				}
+			}
+		}
+		// Trim.
+		if(($n = count($blocs)))
+		{
+			if(trim($blocs[--$n]) == '')
+			{
+				unset($blocs[$n]);
+				unset($types[$n]);
+			}
+			if(trim($blocs[0]) == '')
+			{
+				array_shift($blocs);
+				array_shift($types);
+			}
+			else
+				$blocs[0] = ltrim($blocs[0]);
+		}
+		return $tableau ? array($blocs, $types) : implode('', $blocs);
+	}
+	
+	static function tasser($aff, $mode)
+	{
 		if($mode == Periode::$REDIGE)
 			$aff = strtr($aff, array('  ' => ' ', 'de le' => 'du', 'à à' => 'à', 'à le' => 'au', 'de à' => 'de'));
 		else
 			$aff = strtr($aff, array('- -' => '-', '  ' => ' '));
-		if($aff{0} == ' ')
-			$aff = substr($aff, 1);
 		return $aff;
 	}
 	
-	static function affDate($d, $mode)
+	static function affDate($d, $mode, $tableau = false)
 	{
-		return periode_affDate(Date::fem($d), $mode);
+		return periode_affDate(Date::fem($d), $mode, $tableau);
 	}
 	
 	static function testsAff()
