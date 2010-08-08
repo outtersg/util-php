@@ -56,7 +56,7 @@ function params_decomposer($nom, $tableau, $mode = 0)
 		$numerique = true;
 		$n = -1;
 		foreach($tableau as $cle => $valeur)
-			if($cle != ++$n || is_array($valeur))
+			if(!is_int($cle) || $cle != ++$n || is_array($valeur))
 			{
 				$numerique = false;
 				break;
