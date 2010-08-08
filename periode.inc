@@ -143,7 +143,7 @@ class Periode
 	static public $COURT = 2;
 	static public $REDIGE = 3;
 	
-	static public $UNITES = array(false, false, false, 'h', 'mn', 's');
+	static public $UNITES = array(null, null, null, 'h', 'mn', 's');
 	
 	static function aff($entre, $et, $mode = 0, $tableau = false)
 	{
