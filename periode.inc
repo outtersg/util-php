@@ -42,7 +42,7 @@ function periode_affDate($date, $mode = 0, $tableau = false)
 		if($lettres)
 		{
 			if($date[1] >= 0) $total = sprintf('%s%s', $mois[$date[1]], $total === null ? '' : $sepDate).$total;
-			if($date[2] >= 0) $total = sprintf('%d%s', $date[2], $total === null ? '' : $sepDate).$total;
+			if($date[2] >= 0) $total = sprintf('%d%s%s', $date[2], $date[2] == 1 ? 'er' : '', $total === null ? '' : $sepDate).$total;
 		}
 		else
 		{
