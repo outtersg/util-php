@@ -65,7 +65,7 @@ class Remplacant
 	 * pour: l: le chemin demandé, et e: le fichier appelé à le remplacer.
 	 * Renvoie false si le verrou n'a pas pu être obtenu (un autre programme
 	 * est passé par là, et n'a pas relâché). */
-	static function &Verrouille($chemin, $mode = 0770)
+	static function &Verrouille($chemin, $mode = 0770, $dureeTentativesEnDixiemesDeSecondes = 10)
 	{
 		$r = new Remplacant();
 		$r->mode = $mode;
@@ -78,7 +78,7 @@ class Remplacant
 			$r->chemin = $chemin;
 		register_shutdown_function(array(&$r, 'annuler'));
 		$umask = umask(0777 - $mode);
-		for($n = 10; !($r->e = @fopen($r->chemin.'.verrou', 'x+')) && --$n > 0;)
+		while(!($r->e = @fopen($r->chemin.'.verrou', 'x+')) && --$dureeTentativesEnDixiemesDeSecondes > 0)
 			usleep(100000);
 		umask($umask);
 		if(!$r->e) return $r->e;
