@@ -233,6 +233,11 @@ class Chemin
 		return $r;
 	}
 	
+	function __toString()
+	{
+		return $this->cheminComplet();
+	}
+	
 	function cheminComplet()
 	{
 		$d = $this->cheminDossier();
