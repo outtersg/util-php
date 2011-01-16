@@ -29,13 +29,24 @@
  * - 2: renvoi d'affectations javascript (les variables JS ont le même nom que
  *      celles PHP).
  * - 3: renvoi d'inputs HTML, à insérer directement dans la page.
+ * - 4: comme le 2, avec des [] pour les tableaux numériques sans trous.
  */
 function params_decomposer($nom, $tableau, $mode = 0)
 {
-	if($mode == 2)
+	if($mode == 2 || $mode == 4)
 	{
+		if(($numerique = $mode == 4))
+		{
+			$n = -1;
+			foreach($tableau as $cle => $valeur)
+				if($cle !== ++$n)
+				{
+					$numerique = false;
+					break;
+				}
+		}
 		$premier = true;
-		$retour = $nom === null ? '{ ' : ($nom.': { ');
+		$retour = ($nom === null ? '' : $nom.':').($numerique ? '[ ' : '{ ');
 		foreach($tableau as $cle => $valeur)
 		{
 			if($premier == true)
@@ -43,11 +54,11 @@ function params_decomposer($nom, $tableau, $mode = 0)
 			else
 				$retour .= ', ';
 			if(is_array($valeur))
-				$retour .= params_decomposer($cle, $valeur, $mode);
+				$retour .= params_decomposer($numerique ? null : $cle, $valeur, $mode);
 			else
-				$retour .= $cle.": '".strtr($valeur, array("\r\n" => '\n', "\n" => '\n', "'" => "\\'"))."'"; // À FAIRE: beaucoup plus de remplacements. */
+				$retour .= ($numerique ? '' : $cle.': ')."'".strtr($valeur, array("\r\n" => '\n', "\n" => '\n', "'" => "\\'"))."'"; // À FAIRE: beaucoup plus de remplacements. */
 		}
-		$retour .= ' }';
+		$retour .= $numerique ? ' ]' : ' }';
 	}
 	else
 	{
