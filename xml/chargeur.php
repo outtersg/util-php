@@ -46,16 +46,21 @@ class Chargeur
 	#   traiteurRacine: objet de type Compo qui recevra les événements d'entrée
 	#     et sortie de la racine ou de ses fils (en fonction de nomRacine).
 	#   fatal: si true, une erreur de lecture tue le programme.
-	function charger($chemin, $nomRacine, &$traiteurRacine, $fatal = false)
+	#   fichier: si non null, utilisé directement comme fichier (supposé ouvert en lecture) d'où lire les données. En ce cas $chemin n'est qu'indicatif (pour les messages d'erreur).
+	function charger($chemin, $nomRacine, &$traiteurRacine, $fatal = false, $fichier = null)
 	{
 		$r = true;
 		if($chemin instanceof Chemin) $chemin = $chemin->cheminComplet();
 		
+		if(!isset($fichier))
+		{
 		if(!($fichier = @fopen($chemin, 'r')))
 			if($fatal)
 				die('Ouverture de fichier impossible: '.$chemin);
 			else
 				return false;
+			$cEstMoiQuiLAiOuvert = true;
+		}
 		
 		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, &$traiteurRacine);
 		$interprete = isset($this->encodageDeLecture) ? xml_parser_create($this->encodageDeLecture) : xml_parser_create();
@@ -114,6 +119,7 @@ class Chargeur
 		} while(!$fin);
 		
 		xml_parser_free($interprete);
+		if(isset($cEstMoiQuiLAiOuvert))
 		fclose($fichier);
 		
 		return $r;
