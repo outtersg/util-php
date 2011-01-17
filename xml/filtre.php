@@ -37,6 +37,8 @@ class XmlFiltre extends Compo
 		$this->sortie->entrer($nom);
 		foreach($attributs as $attr => $val)
 			$this->sortie->attribut($attr, $val);
+		$r = null;
+		return $r;
 	}
 	
 	function contenuPour(&$objet, $contenu)
@@ -47,6 +49,8 @@ class XmlFiltre extends Compo
 	function sortirDe(&$objet, $nom)
 	{
 		$this->sortie->sortir();
+		$r = null;
+		return $r;
 	}
 	
 	function sortir()
