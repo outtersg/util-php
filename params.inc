@@ -56,7 +56,7 @@ function params_decomposer($nom, $tableau, $mode = 0)
 			if(is_array($valeur))
 				$retour .= params_decomposer($numerique ? null : $cle, $valeur, $mode);
 			else
-				$retour .= ($numerique ? '' : $cle.': ')."'".strtr($valeur, array("\r\n" => '\n', "\n" => '\n', "'" => "\\'"))."'"; // À FAIRE: beaucoup plus de remplacements. */
+				$retour .= ($numerique ? '' : "'".$cle."': ").(is_int($valeur) ? $valeur : "'".strtr($valeur, array("\r\n" => '\n', "\n" => '\n', "'" => "\\'"))."'"); // À FAIRE: beaucoup plus de remplacements. */
 		}
 		$retour .= $numerique ? ' ]' : ' }';
 	}
