@@ -173,7 +173,7 @@ class Chemin
 	
 	/*- Consultation ---------------------------------------------------------*/
 	
-	function cheminDossierJusquA($n)
+	function cheminDossierJusquA($n, $url = false)
 	{
 		if($this->protocole !== null)  // Un protocole au début.
 			$r = $this->protocole;
@@ -181,13 +181,13 @@ class Chemin
 			$r = '';
 		
 		for($i = 0; $i < $n; $i += 2)
-			$r .= ($this->chemin[$i] == 1 ? $this->chemin[$i+1] : '..').'/';
+			$r .= ($this->chemin[$i] == 1 ? ($url ? rawurlencode($this->chemin[$i+1]) : $this->chemin[$i+1]) : '..').'/';
 		return $r ? $r : './';
 	}
 	
-	function cheminDossier()
+	function cheminDossier($url = false)
 	{
-		return $this->cheminDossierJusquA(count($this->chemin));
+		return $this->cheminDossierJusquA(count($this->chemin), $url);
 	}
 	
 	function dossierInverse()
@@ -242,6 +242,13 @@ class Chemin
 	{
 		$d = $this->cheminDossier();
 		return $this->fichier && $d == './' ? $this->fichier : $d.$this->fichier;
+	}
+	
+	function url()
+	{
+		$d = $this->cheminDossier(true);
+		$urlFichier = $this->fichier ? rawurlencode($this->fichier) : $this->fichier;
+		return $this->fichier && $d == './' ? $urlFichier : $d.$urlFichier;
 	}
 	
 	/* Renvoie (si possible) le chemin absolu de celui-ci, en allant chercher
