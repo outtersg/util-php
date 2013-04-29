@@ -136,6 +136,18 @@ function periode_union($periodes)
 	return $res;
 }
 
+/**
+ * @param $ratioRecouvrement Combien une "grosse" unité recouvre de sa période réelle (ex.: si ce paramètre vaut 1/3, un juillet - août 2012 ira grosso modo du 20 juillet au 10 août, le rendant compatible avec un août - septembre ou même un 15 - 31 août. Par contre juillet - août 2012 sera considéré comme chevauchant une période du 8 au 20 août).
+ */
+function periode_seChevauchent($periodes0, $periodes1, $ratioRecouvrement = 0.3)
+{
+	foreach($periodes0 as $p0)
+		foreach($periodes1 as $p1)
+			if(comparer_datations($p0[0], $p1[1], true, $ratioRecouvrement) <= 0 && comparer_datations($p1[0], $p0[1], true, $ratioRecouvrement) <= 0)
+				return true;
+	return false;
+}
+
 class Periode
 {
 	static public $ECRIT = 0;
