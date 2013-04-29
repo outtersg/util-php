@@ -32,7 +32,7 @@ function  completer_datation($original, $avec) { return Date::fem(Date::complete
 function  calculer_datation($chose) { return Date::calculer(Date::mef($chose)); }
 function  obtenir_datation($secondes) { return Date::obtenir_datation($secondes); }
 function  corriger_datation($chose) { return Date::fem(Date::corriger(Date::mef($chose))); }
-function  comparer_datations($d0, $d1) { return Date::comparer(Date::mef($d0), Date::mef($d1)); }
+function  comparer_datations($d0, $d1, $considererCommeDebutEtFin = null, $occupationIndefinis = 1) { return Date::comparer(Date::mef($d0), Date::mef($d1), $considererCommeDebutEtFin, $occupationIndefinis); }
 function  tester_decoupage_datation() { return Date::tester_decoupage_datation(); }
 function  afficher_test_decoupage_datation($date) { return Date::afficher_test_decoupage_datation($date); }
 
@@ -372,10 +372,18 @@ static function corriger($chose)
 	return $r;
 }
 
-/* Renvoie un nombre inférieur, égal ou supérieur à 0 selon que le premier
+/**
+ * Renvoie un nombre inférieur, égal ou supérieur à 0 selon que le premier
  * paramètre est gnagnagna, gnagnagna ou gnagnagna blabla. Ne fonctionne pas
- * forcément si vous laissez trop de trous dans vos dates. */
-static function comparer($d0, $d1)
+ * forcément si vous laissez trop de trous dans vos dates.
+ * 
+ * @param Datation $d0 Première date.
+ * @param Datation $d1 Seconde date.
+ * @param mixed $considererCommeDebutEtFin Si null, les indéfinis ne sont pas comparés, et un indéfini est considéré égal à tout. Si booléen, les indéfinis sont comparés, soit en étant pris à leur début (si false), soit en étant pris à leur début pour $d0 et fin pour $d1 (si true). Ainsi, à true, $d0 au 26 janvier est équivalent au 26 janvier 00:00:00, tandis que $d1 au 26 janvier sera équivalent au 26 janvier 23:59:59.
+ * @param float $occupationIndefinis Portion de l'unité qu'occupe un indéfini. À 1, on prend l'unité incluse complète (le 26 janvier est un 26 janvier à partir de 00:00:00), tandis qu'à 2/3, on le prend à partir de 8 h du mat'.
+ * @return integer <, = ou > à 0, selon que $d0 est <, = ou > que $d1.
+ */
+static function comparer($d0, $d1, $considererCommeDebutEtFin = null, $occupationIndefinis = 1)
 {
 	if($d0 === null)
 		if($d1 === null)
@@ -386,8 +394,28 @@ static function comparer($d0, $d1)
 		return 2;
 	for($i = 0; $i < 6; ++$i)
 	{
-		if(($d0[$i] === null && $d1[$i] !== null) || ($d1[$i] === null && $d0[$i] !== null))
+		if($d0[$i] === null && $d1[$i] === null)
+		{
+			if(isset($considererCommeDebutEtFin) && $considererCommeDebutEtFin)
+				return 0.5 - $occupationIndefinis; // Le début est inférieur à la fin tant que, sur l'unité à départager, il ne sont pas « repoussés » plus loin que la moitié.
+			return 0;
+		}
+		if($d0[$i] === null || $d1[$i] === null)
+		{
+			if(!isset($considererCommeDebutEtFin))
 			return 0; // Vous êtes incomparables, toutes les deux.
+			// Puisqu'on a des instructions pour le complément, on les applique, et on continuera dans la boucle comme si de rien n'était.
+			$tRefs = array(0 => & $d0, 1 => & $d1);
+			foreach($tRefs as $num => & $d)
+				if($d[$i] === null)
+				{
+					$dzero = Date::calculer(Date::completer(array(1970, 1, 1, 0, 0, 0), $d));
+					++$d[$i - 1];
+					$dplusun = Date::calculer(Date::completer(array(1970, 1, 1, 0, 0, 0), $d)) - 1; // Et on retire une petite seconde pour être au bout du bout, mais toujours dans le cadre.
+					$plutotApres = ($num && $considererCommeDebutEtFin) ? $occupationIndefinis : 1 - $occupationIndefinis;
+					$d = Date::obtenir((1 - $plutotApres) * $dzero + $plutotApres * $dplusun);
+				}
+		}
 		if($d0[$i] < $d1[$i]) return -1;
 		if($d0[$i] > $d1[$i]) return 1;
 	}
