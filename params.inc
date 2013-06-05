@@ -33,6 +33,11 @@
  */
 function params_decomposer($nom, $tableau, $mode = 0)
 {
+	if($mode == 0)
+	{
+		$retour = params_decomposer0($nom, $tableau);
+		return $retour ? '?'.$retour : '';
+	}
 	if($mode == 2 || $mode == 4)
 	{
 		if(($numerique = $mode == 4))
