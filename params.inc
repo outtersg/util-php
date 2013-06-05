@@ -101,6 +101,35 @@ function params_decomposer($nom, $tableau, $mode = 0)
 	return $retour;
 }
 
+function params_aplatir0($valeur, $cle)
+{
+	return urlencode($cle).'='.urlencode($valeur);
+}
+
+function params_decomposer0($nom, $tableau, $interne = false)
+{
+	$numerique = array_keys($tableau) === range(0, count($tableau) - 1);
+	if($numerique)
+		foreach($tableau as $valeur)
+			if(is_array($valeur))
+			{
+				$numerique = false;
+				break;
+			}
+	$deploye = array();
+	foreach($tableau as $cle => $valeur)
+	{
+		$sousCle = isset($nom) ? $nom.'['.($numerique ? '' : $cle).']' : $cle;
+		if(is_array($valeur))
+			$deploye = array_merge($deploye, params_decomposer0($sousCle, $valeur, true));
+		else
+			$deploye[$sousCle] = $valeur;
+	}
+	if($interne)
+		return $deploye;
+	return implode('&', array_map('params_aplatir0', $deploye, array_keys($deploye)));
+}
+
 function params_combiner($tableau1, $tableau2)
 {
 	foreach($tableau2 as $cle => $valeur)
