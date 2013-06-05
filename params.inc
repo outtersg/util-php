@@ -83,7 +83,7 @@ function params_decomposer($nom, $tableau, $mode = 0)
 				switch($mode)
 				{
 					case 0:
-					$retour .= '&'.$nomCompose.'='.$valeur;
+					$retour .= '&'.urlencode($nomCompose).'='.urlencode($valeur);
 					break;
 					case 1:
 					$retour .= "\n".'temp = document.createElement(\'input\');';
