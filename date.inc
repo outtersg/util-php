@@ -421,6 +421,25 @@ static function comparer($d0, $d1, $considererCommeDebutEtFin = null, $occupatio
 	}
 	return 0;
 }
+	
+	static function calculerAvecIndefinis($d, $plutotApres = false, $occupationIndefinis = 1)
+	{
+		// Cas particulier: une date « Maintenant ».
+		if($d === array(null, null, null, null, null, null))
+			return time();
+		// Cas particulier: une date ultra précise.
+		for($i = -1; ++$i < 6 && $d[$i] !== null;) {}
+		if($i == 6)
+			return self::calculer($d);
+		/* COPIE: comparer() possède un bout ressemblant vachement à ça. */
+		$dzero = Date::calculer(Date::completer(array(1970, 1, 1, 0, 0, 0), $d));
+		++$d[$i - 1];
+		$dplusun = Date::calculer(Date::completer(array(1970, 1, 1, 0, 0, 0), $d)) - 1; // Et on retire une petite seconde pour être au bout du bout, mais toujours dans le cadre.
+		$plutotApres = $plutotApres ? $occupationIndefinis : 1 - $occupationIndefinis;
+		$d = (1 - $plutotApres) * $dzero + $plutotApres * $dplusun;
+		
+		return $d;
+	}
 
 static function moins($date, $moins)
 {
