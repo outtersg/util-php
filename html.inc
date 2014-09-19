@@ -83,17 +83,22 @@ function html_chaineJS($chaine)
 
 /*- Stockage -----------------------------------------------------------------*/
 
-function html_session()
+function html_session($jeGereMoiMeme = false)
 {
 	/* Stockage de session par cookies? Et comment vous faites pour vous loguer
 	 * sous deux comptes différents dans le même navigateur? */
 	
 	try
 	{
-		@ini_set("session.use_cookies", false);
-		@ini_set("session.use_trans_sid", true);
+		ini_set("session.use_cookies", false);
+		if(!$jeGereMoiMeme)
+		{
+			error_log('Utilisation de use_trans_sid. Attention, pas bon: d\'une, on ne maîtrise plus nos URL. De deux, on peut observer des blocages d\'appli (pasτεχ: smile par exemple bloque si html_session est appelé en false)');
+			error_log(print_r(array_map(create_function('$x', 'return $x["file"].":".$x["line"].": ".$x["function"];'), array_slice(debug_backtrace(), 0, 8)), true));
+		ini_set("session.use_trans_sid", true);
+		}
 	} catch(Exception $e) {}
-	@session_start();
+	session_start();
 }
 
 /*- Éléments d'interface -----------------------------------------------------*/
