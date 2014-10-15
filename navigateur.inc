@@ -96,8 +96,8 @@ class Navigateur
 				/* PHP est bourrin, il poste en multipart si $champs est un tableau.
 				 * Ça ne nous plaît pas du tout, enfin nous si, mais pas Monster
 				 * pour l'authentification. */
-				$champsTasses = params_decomposer(null, $champs);
-				curl_setopt($c, CURLOPT_POSTFIELDS, substr($champsTasses, 1));
+				$champs = is_string($champs) ? $champs : substr(params_decomposer(null, $champs), 1);
+				curl_setopt($c, CURLOPT_POSTFIELDS, $champs);
 			}
 			$GLOBALS['navigateur_recuperateurEnTetes'] = &$this;
 			curl_setopt($c, CURLOPT_HEADERFUNCTION, 'navigateur_recupEnTete');
