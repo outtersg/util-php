@@ -115,6 +115,9 @@ class Navigateur
 			curl_close($c);
 			$this->tasserCookies();
 			
+			if(!$this->suivreLocations)
+				return $r;
+			
 			/* Pour continuer (redirection) */
 			
 			$champs = null;
@@ -180,6 +183,7 @@ class Navigateur
 	protected $cookies;
 	public $données; // Données supplémentaires attachées à la session, laissées à la discrétion de l'utilisateur (ex.: résultat de l'interprétation de la page chargée).
 	protected $suivre; // État: a-t-on reçu un Location: dans la dernière réponse?
+	public $suivreLocations = true;
 }
 
 function navigateur_recupEnTete($curl, $enTete)
