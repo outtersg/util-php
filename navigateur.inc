@@ -70,7 +70,7 @@ class Navigateur
 	 *   continuer: si true, le Navigateur est mis-à-jour avec les nouvelles
 	 *     infos collectées.
 	 */
-	function obtenir($url, $champs = null, $continuer = false)
+	function obtenir($url, $champs = null, $continuer = false, $enTetesHttp = null)
 	{
 		$this->suivre = $url;
 		$this->continuer = $continuer;
@@ -107,6 +107,8 @@ class Navigateur
 				curl_setopt($c, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 				curl_setopt($c, CURLOPT_USERPWD, $this->auth); // id:mdp
 			}
+			if(isset($enTetesHttp))
+				curl_setopt($c, CURLOPT_HTTPHEADER, $enTetesHttp);
 			if($this->continuer)
 				$this->derniere = $url;
 			$r = curl_exec($c);
