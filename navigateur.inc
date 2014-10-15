@@ -87,7 +87,7 @@ class Navigateur
 			curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
 			$url = $this->url($url);
 			curl_setopt($c, CURLOPT_URL, $url);
-			curl_setopt($c, CURLOPT_COOKIE, &$this->cookiesTasses); // Par référence, car entre deux redirections, ils doivent avoir été mis à jour; et on ne peut intervenir que sur cette variable.
+			curl_setopt($c, CURLOPT_COOKIE, $this->cookiesTasses);
 			if($champs !== null)
 			{
 				foreach($champs as $cle => $valeur)
