@@ -62,12 +62,12 @@ class Chargeur
 			$cEstMoiQuiLAiOuvert = true;
 		}
 		
-		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, &$traiteurRacine);
+		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, $traiteurRacine);
 		$interprete = isset($this->encodageDeLecture) ? xml_parser_create($this->encodageDeLecture) : xml_parser_create();
 		if(isset($this->encodageDeRestitution))
 			xml_parser_set_option($interprete, XML_OPTION_TARGET_ENCODING, "UTF-8");
 		xml_parser_set_option($interprete, XML_OPTION_CASE_FOLDING, FALSE);
-		xml_set_object($interprete, &$this);
+		xml_set_object($interprete, $this);
 		xml_set_element_handler($interprete, 'entrer', 'sortir');
 		xml_set_character_data_handler($interprete, 'contenu');
 		
@@ -136,10 +136,10 @@ class Chargeur
 			else
 				return false;
 		
-		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, &$traiteurRacine);
+		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, $traiteurRacine);
 		$interprete = xml_parser_create();
 		xml_parser_set_option($interprete, XML_OPTION_CASE_FOLDING, FALSE);
-		xml_set_object($interprete, &$this);
+		xml_set_object($interprete, $this);
 		xml_set_element_handler($interprete, 'entrer', 'sortir');
 		xml_set_character_data_handler($interprete, 'contenu');
 		
@@ -158,7 +158,7 @@ class Chargeur
 	function entrer($interprete, $nom, $attrs)
 	{
 		$courant = &$this->courant();
-		$resultat = &$courant->entrerDans(&$this->pile[count($this->pile)-1], $nom, $attrs);
+		$resultat = &$courant->entrerDans($this->pile[count($this->pile)-1], $nom, $attrs);
 		$this->pile[] = &$resultat;
 		if($resultat instanceof Compo)
 			$resultat->entrer();
@@ -171,14 +171,14 @@ class Chargeur
 			$dernier->sortir();
 		array_pop($this->pile);
 		$courant = &$this->courant();
-		$courant->sortirDe(&$dernier, $nom);
+		$courant->sortirDe($dernier, $nom);
 	}
 	
 	function contenu($interprete, $chaine)
 	{
 		if(strlen(trim($chaine)) == 0) return;
 		$courant = &$this->courant();
-		$courant->contenuPour(&$this->pile[count($this->pile)-1], $chaine);
+		$courant->contenuPour($this->pile[count($this->pile)-1], $chaine);
 	}
 	
 	/* Renvoie le dernier Compo (compo courant) de la pile. */
