@@ -62,7 +62,7 @@ class Chargeur
 			$cEstMoiQuiLAiOuvert = true;
 		}
 		
-		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, $traiteurRacine);
+		$this->pile[] = $nomRacine === null ? $traiteurRacine : new GobeurRacine($nomRacine, &$traiteurRacine);
 		$interprete = isset($this->encodageDeLecture) ? xml_parser_create($this->encodageDeLecture) : xml_parser_create();
 		if(isset($this->encodageDeRestitution))
 			xml_parser_set_option($interprete, XML_OPTION_TARGET_ENCODING, "UTF-8");
