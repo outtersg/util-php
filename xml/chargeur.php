@@ -161,7 +161,10 @@ class Chargeur
 		$resultat = &$courant->entrerDans($this->pile[count($this->pile)-1], $nom, $attrs);
 		$this->pile[] = &$resultat;
 		if($resultat instanceof Compo)
+		{
+			method_exists($resultat, 'notifChargeur') && $resultat->notifChargeur($this);
 			$resultat->entrer();
+		}
 	}
 	
 	function sortir($interprete, $nom)
