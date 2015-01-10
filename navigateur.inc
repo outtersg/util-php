@@ -39,9 +39,10 @@ class Navigateur
 		$noms = array_keys($this->cookies);
 		$n = count($noms) - 1;
 		if($n < 0) { $this->cookiesTasses = null; return; }
-		$this->cookiesTasses = $noms[$n].$this->cookies[$noms[$n]];
-		while(--$n >= 0)
-			$this->cookiesTasses .= '; '.$noms[$n].$this->cookies[$noms[$n]];
+		$this->cookiesTasses = array();
+		foreach($this->cookies as $clé => $val)
+			$this->cookiesTasses[] = $clé.'="'.$val.'"';
+		$this->cookiesTasses = implode('; ', $this->cookiesTasses);
 	}
 	
 	/* Calcule l'URL absolue atteinte depuis le nœud courant en attaquant une
@@ -140,12 +141,20 @@ class Navigateur
 	{
 		if($this->continuer && (strpos($enTete, 'Set-Cookie: ') === 0))
 		{
-			if(($pos = strpos($enTete, ';', 0xc)) !== false)
-			{
-				$enTete = substr($enTete, 0xc, $pos - 0xc);
-				$pos = strpos($enTete, '=');
-				$this->cookies[substr($enTete, 0, $pos)] = substr($enTete, $pos);
-			}
+			$ligne = trim(substr($enTete, 0xc));
+			preg_match_all('# *([^=]*)=(([^"][^;]*)|"([^"]*)");#', $ligne.';', $rés);
+			$nom = $rés[1][0];
+			$val = $rés[4][0] !== '' ? $rés[4][0] : $rés[3][0];
+			for($i = count($rés[1]); --$i >= 1;)
+				if($rés[1][$i] == 'Expires')
+				{
+					if(strpos($rés[2][$i], '-1970') !== false)
+					{
+						unset($this->cookies[$nom]);
+						return;
+					}
+				}
+			$this->cookies[$nom] = $val;
 		}
 		else if(strpos($enTete, 'Location: ') === 0 || strpos($enTete, 'location: ') === 0) // Sale con d'IIS de photoservice.com!
 			$this->suivre = strtr(substr($enTete, 0xa), array("\n" => '', "\r" => '')); // Un caractère retour à la fin.
