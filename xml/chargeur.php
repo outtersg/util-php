@@ -181,8 +181,8 @@ class Chargeur
 	
 	function contenu($interprete, $chaine)
 	{
-		if(strlen(trim($chaine)) == 0) return;
 		$courant = &$this->courant();
+		if(!isset($courant->preserveEspaces) && strlen(trim($chaine)) == 0) return;
 		$courant->contenuPour($this->pile[count($this->pile)-1], $chaine);
 	}
 	
