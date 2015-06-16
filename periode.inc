@@ -317,7 +317,7 @@ class Periode
 /* Calcule la durée d'une période. L'unité est le plus petit champ rempli à la
  * fois dans $debut et $fin. Fonctionne en décrémentant, donc ça peut être
  * long. $fin exclus. */
-function duree($debut, $fin, $numChampUnite = false)
+	static function duree($debut, $fin, $numChampUnite = false)
 {
 	/* À FAIRE: une version qui sache utiliser des raccourcis, ex.: 3600 s dans
 	 * 1 h, 24 h dans un jour sauf au changement d'heure, etc. */
@@ -335,7 +335,7 @@ function duree($debut, $fin, $numChampUnite = false)
 
 /* Renvoie le nombre d'unités dont aura été décrémentée $date pour que son
  * champs $numChamp ait baissé à $valeur. */
-function descendreA(&$date, $numChamp, $valeur, $numChampUnite)
+static function descendreA(&$date, $numChamp, $valeur, $numChampUnite)
 {
 	$mini = array(0, 1, 1, 0, 0, 0); // Seuil de chacun des éléments.
 	if($valeur == -1) $valeur = $mini[$numChamp] - 1;
