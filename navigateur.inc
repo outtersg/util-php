@@ -93,9 +93,11 @@ class Navigateur
 			curl_setopt($c, CURLOPT_COOKIE, $this->cookiesTasses);
 			if($champs !== null)
 			{
+				/* Ça on vire, c'est déjà fait par params_decomposer (à part la conversion en latin1. Peut-être un paramètre à rajouter?).
 				foreach($champs as $cle => $valeur)
 					if(!is_array($valeur))
-						$champs[$cle] = urlencode(iconv('UTF-8', 'ISO-8859-1//IGNORE', $valeur)); /* À FAIRE: ne pas coder en dur cette saleté d'ISO-8859-1 (qui n'accepte même pas mon pasτεχ); dépendre des directives du formulaire rempli. *//* À FAIRE: rentrer récursivement dans les tableaux. */
+						$champs[$cle] = urlencode(iconv('UTF-8', 'ISO-8859-1//IGNORE', $valeur)); // À FAIRE: ne pas coder en dur cette saleté d'ISO-8859-1 (qui n'accepte même pas mon pasτεχ); dépendre des directives du formulaire rempli. *//* À FAIRE: rentrer récursivement dans les tableaux.
+				*/
 				/* PHP est bourrin, il poste en multipart si $champs est un tableau.
 				 * Ça ne nous plaît pas du tout, enfin nous si, mais pas Monster
 				 * pour l'authentification. */
