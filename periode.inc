@@ -367,5 +367,50 @@ static function descendreA(&$date, $numChamp, $valeur, $numChampUnite)
 	$date = Date::corriger($date);
 	return $total;
 }
-
+	
+	public static function unionSi($périodes, $sEffleurentSinonSeChevauchent = true)
+	{
+		if(count($périodes) <= 1)
+			return $périodes;
+		
+		$r = array(array_shift($périodes));
+		while(count($périodes))
+		{
+			$nouvellePourComparaison = $nouvelle = array_shift($périodes);
+			if($sEffleurentSinonSeChevauchent)
+			{
+				$nouvellePourComparaison[0] = Date::dernierChampPlus($nouvellePourComparaison[0], -1);
+				$nouvellePourComparaison[1] = Date::dernierChampPlus($nouvellePourComparaison[1], 1);
+			}
+			// Où place-t-on notre départ?
+			for($i = 0; $i < count($r); ++$i)
+				if(Date::comparer($nouvellePourComparaison[0], $r[$i][0]) < 0)
+					break;
+			// Voyons si on touche notre prédécesseur.
+			if($i > 0 && Date::comparer($nouvellePourComparaison[0], $r[$i - 1][1]) <= 0) // Chevauchement! On fusionne.
+			{
+				--$i;
+				if(Date::comparer($nouvelle[0], $r[$i][0]) < 0)
+					$r[$i][0] = $nouvelle[0];
+				if(Date::comparer($nouvelle[1], $r[$i][1]) > 0)
+					$r[$i][1] = $nouvelle[1];
+			}
+			else
+				array_splice($r, $i, 0, array($nouvelle));
+			// Puis on essaie de manger le maximum de nos successeurs.
+			for($j = $i; ++$j < count($r);)
+				if(Date::comparer($nouvellePourComparaison[1], $r[$j][0]) >= 0) // On touche!
+				{
+					if(Date::comparer($nouvelle[1], $r[$j][1]) < 0)
+					{
+						$r[$i][1] = $r[$j][1];
+						array_splice($r, $j, 1);
+						break; // Et on n'ira pas plus loin.
+					}
+					array_splice($r, $j, 1); // Mangé tout cru: on l'englobe.
+				}
+		}
+		
+		return $r;
+	}
 }
