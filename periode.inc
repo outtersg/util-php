@@ -158,6 +158,7 @@ class Periode
 	static public $DE_A = 0x04; // "de x à y", plutôt que "x - y".
 	static public $LE = 0x08; // "le x à y h", plutôt que "x y h".
 	static public $CHIFFRES = 0x10; // "le 12/01", plutôt que "le 12 janvier".
+	static public $JOUR_INSECABLE = 0x20; // "du 12/05/2003 au 23/05/2003", plutôt que "du 12 au 23/05/2003".
 	
 	static public $UNITES = array(null, null, null, 'h', 'mn', 's');
 	
@@ -197,6 +198,8 @@ class Periode
 		 * S1 H1 S2 C H2 paraît peu naturel. */
 		
 		$reducs = array('SC.SC' => 'S.SC', 'Cs.Cs' => 'C_s.s', 'SCs.SCs' => 'SCs.Ss', 'Cc.Cc' => 'Cc.', 'C.C' => 'C.');
+		if($mode & Periode::$JOUR_INSECABLE)
+			$reducs = array('Cs.Cs' => 'C_s.s', 'Cc.Cc' => 'Cc.', 'C.C' => 'C.');
 		
 		if($premierDef < 3)
 		{
