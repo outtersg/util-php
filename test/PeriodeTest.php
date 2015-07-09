@@ -37,6 +37,56 @@ class PeriodeTest extends PHPUnit_Framework_TestCase
 		$this->assertLessThan(0, Date::comparer($d1, $d0, true));
 		$this->assertGreaterThan(0, Date::comparer($d1, $d0, false, 0.25));
 	}
+	
+	function testUnionSi()
+	{
+		$t = array
+		(
+			// Ils se touchent.
+			array
+			(
+				array
+				(
+					array(array(2012, 3, null, null, null, null), array(2012, 5, null, null, null, null)),
+					array(array(2012, 6, null, null, null, null), array(2012, 8, null, null, null, null)),
+				),
+				array
+				(
+					array(array(2012, 3, null, null, null, null), array(2012, 8, null, null, null, null)),
+				),
+			),
+			// Ils ne se touchent pas.
+			array
+			(
+				array
+				(
+					array(array(2012, 3, null, null, null, null), array(2012, 4, null, null, null, null)),
+					array(array(2012, 6, null, null, null, null), array(2012, 8, null, null, null, null)),
+				),
+				array
+				(
+					array(array(2012, 3, null, null, null, null), array(2012, 4, null, null, null, null)),
+					array(array(2012, 6, null, null, null, null), array(2012, 8, null, null, null, null)),
+				),
+			),
+			// L'un englobe l'autre.
+			array
+			(
+				array
+				(
+					array(array(2012, 3, null, null, null, null), array(2012, 5, null, null, null, null)),
+					array(array(2011, 11, null, null, null, null), array(2012, 8, null, null, null, null)),
+				),
+				array
+				(
+					array(array(2011, 11, null, null, null, null), array(2012, 8, null, null, null, null)),
+				),
+			),
+		);
+		
+		foreach($t as $cas)
+			$this->assertEquals($cas[1], Periode::unionSi($cas[0]));
+	}
 }
 
 ?>
