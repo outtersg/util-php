@@ -32,7 +32,7 @@ function periode_aff($entre, $et, $mode = 0) { return Periode::aff(Date::mef($en
 function periode_affDate($date, $mode = 0, $tableau = false)
 {
 	$total = null;
-	$lettres = in_array($mode, array(Periode::$ECRIT, Periode::$REDIGE));
+	$lettres = !($mode & Periode::$CHIFFRES);
 	$sepDate = $lettres ? ' ' : '/';
 	$mois = array('hors du temps', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre');
 	if($date[0] >= 0 || $date[1] >= 0 || $date[2] >= 0)
@@ -98,11 +98,11 @@ function periode_affDate($date, $mode = 0, $tableau = false)
 	{
 		if($total)
 			$res[] = ' ';
-		$res[] = $mode == Periode::$REDIGE ? 'à ' : '';
+		$res[] = ($mode & Periode::$LE) ? 'à ' : '';
 		$res['heure'] = $hms;
 	}
 	
-	if($mode == Periode::$REDIGE && $date[2] >= 0)
+	if(($mode & Periode::$LE) && $date[2] >= 0)
 	{
 		if ($date[1] < 0 && $date[0] < 0)
 		{
@@ -155,10 +155,21 @@ class Periode
 	static public $COURT = 2;
 	static public $REDIGE = 3;
 	
+	static public $DE_A = 0x04; // "de x à y", plutôt que "x - y".
+	static public $LE = 0x08; // "le x à y h", plutôt que "x y h".
+	static public $CHIFFRES = 0x10; // "le 12/01", plutôt que "le 12 janvier".
+	
 	static public $UNITES = array(null, null, null, 'h', 'mn', 's');
 	
 	static function aff($entre, $et, $mode = 0, $tableau = false)
 	{
+		switch($mode)
+		{
+			case Periode::$ECRIT: $mode = Periode::$DE_A; break;
+			case Periode::$NUMERIQUE: $mode = Periode::$CHIFFRES; break;
+			case Periode::$COURT: $mode = Periode::$DE_A | Periode::$CHIFFRES; break;
+			case Periode::$REDIGE: $mode = Periode::$DE_A | Periode::$LE; break;
+		}
 		$b2 = $b1 = ''; // Blocs présents dans les dates; une fois déterminés, on tentera de les réduire pour en afficher le minimum.
 		
 		/* Détermination de ce qu'on a en commun. */
@@ -217,7 +228,7 @@ class Periode
 					switch($b1{$z})
 					{
 						case '_':
-							$blocs[] = $mode == Periode::$REDIGE ? ($nDates ? '_ à ' : '_ de ') : ($nDates ? '_ - ' : '');
+							$blocs[] = ($mode & Periode::$LE) ? ($nDates ? '_ à ' : '_ de ') : ($nDates ? '_ - ' : '');
 							$types[] = 0;
 							continue 2;
 						case 'T': $entre = 0; $et = 5; break;
@@ -283,7 +294,7 @@ class Periode
 	
 	static function tasser($aff, $mode)
 	{
-		if($mode == Periode::$REDIGE)
+		if($mode & Periode::$LE)
 			$aff = strtr($aff, array('  ' => ' ', 'de le' => 'du', 'à à' => 'à', 'à le' => 'au', 'de à' => 'de'));
 		else
 			$aff = strtr($aff, array('- -' => '-', '  ' => ' '));
