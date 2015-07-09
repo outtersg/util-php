@@ -451,6 +451,18 @@ static function moins($date, $moins)
 		}
 	return $date;
 }
+	
+	public static function dernierChampPlus($date, $ajout)
+	{
+		for($i = 6; --$i >= 0;)
+			if(isset($date[$i]))
+			{
+				$date[$i] += $ajout;
+				$date = Date::corriger($date);
+				break;
+			}
+		return $date;
+	}
 
 /*- Tests --------------------------------------------------------------------*/
 
