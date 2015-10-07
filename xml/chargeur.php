@@ -46,7 +46,7 @@ class Chargeur
 	#   traiteurRacine: objet de type Compo qui recevra les événements d'entrée
 	#     et sortie de la racine ou de ses fils (en fonction de nomRacine).
 	#   fatal: si true, une erreur de lecture tue le programme.
-	#   fichier: si non null, utilisé directement comme fichier (supposé ouvert en lecture) d'où lire les données. En ce cas $chemin n'est qu'indicatif (pour les messages d'erreur).
+	#   fichier: si non null, utilisé directement comme fichier (supposé ouvert en lecture) d'où lire les données. En ce cas $chemin n'est qu'indicatif (pour les messages d'erreur). Si $fichier est une chaîne de caractères, on le prend comme contenu du fichier.
 	function charger($chemin, $nomRacine, &$traiteurRacine, $fatal = false, $fichier = null)
 	{
 		$r = true;
@@ -77,9 +77,17 @@ class Chargeur
 		
 		do
 		{
+			if(is_string($fichier))
+			{
+				$donnees = $fichier;
+				$fin = true;
+			}
+			else
+			{
 			if(($donnees = fread($fichier, $this->tailleBloc)) == null)
 				$donnees = '';
 			$fin = feof($fichier);
+			}
 			
 			/* Grâce à cet abruti d'expat qui ne sait pas constituer des fragments
 			* continus de texte, à cet abruti d'expat qui ne sait pas faire un
