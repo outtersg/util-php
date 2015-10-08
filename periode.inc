@@ -426,6 +426,17 @@ static function descendreA(&$date, $numChamp, $valeur, $numChampUnite)
 
 class Dateur extends Dateur0
 {
+	public function aff($date, $mode = 0, $tableau = false)
+	{
+		$dateurGlobal = $GLOBALS['dateur'];
+		$GLOBALS['dateur'] = $this;
+		
+		$r = parent::aff($date, $mode, $tableau);
+		
+		$GLOBALS['dateur'] = $dateurGlobal;
+		
+		return $r;
+	}
 }
 
 $GLOBALS['dateur'] = new Dateur;
