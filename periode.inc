@@ -31,6 +31,14 @@ function periode_aff($entre, $et, $mode = 0) { return Periode::aff(Date::mef($en
 
 function periode_affDate($date, $mode = 0, $tableau = false)
 {
+	return $GLOBALS['dateur']->aff($date, $mode, $tableau);
+}
+
+/* À FAIRE: cette classe devra finir par disparaître. Elle est juste là pour envelopper le code historique (histoire que le versionnage ne le voie pas disparaître). Les modifications de code devront être déportées à la classe Dateur, jusqu'à ce qu'il n'y ait plus de code ici. */
+class Dateur0
+{
+	public function aff($date, $mode = 0, $tableau = false)
+	{
 	$total = null;
 	$lettres = !($mode & Periode::$CHIFFRES);
 	$sepDate = $lettres ? ' ' : '/';
@@ -114,6 +122,7 @@ function periode_affDate($date, $mode = 0, $tableau = false)
 			array_unshift($res, 'le ');
 	}
 	return $tableau ? $res : implode('', $res);
+	}
 }
 
 /*- Calcul -------------------------------------------------------------------*/
@@ -414,3 +423,9 @@ static function descendreA(&$date, $numChamp, $valeur, $numChampUnite)
 		return $r;
 	}
 }
+
+class Dateur extends Dateur0
+{
+}
+
+$GLOBALS['dateur'] = new Dateur;
