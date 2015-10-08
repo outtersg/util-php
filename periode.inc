@@ -42,7 +42,8 @@ class Dateur0
 	$total = null;
 	$lettres = !($mode & Periode::$CHIFFRES);
 	$sepDate = $lettres ? ' ' : '/';
-	$mois = array('hors du temps', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre');
+		$langue = isset($this->langue) && isset(Dateur::$LANGUES[$this->langue]) ? $this->langue : 'fr';
+		$mois = Dateur::$LANGUES[$langue]['mois'];
 	if($date[0] >= 0 || $date[1] >= 0 || $date[2] >= 0)
 	{
 		$p = $mode == 2 ? 2 : 4; // Précision sur l'année. Bon, ça ne marche pas, il faudrait être plus tordu pour récupérer vraiment les deux derniers chiffres.
@@ -426,6 +427,8 @@ static function descendreA(&$date, $numChamp, $valeur, $numChampUnite)
 
 class Dateur extends Dateur0
 {
+	public $langue = null;
+	
 	public function aff($date, $mode = 0, $tableau = false)
 	{
 		$dateurGlobal = $GLOBALS['dateur'];
@@ -437,6 +440,18 @@ class Dateur extends Dateur0
 		
 		return $r;
 	}
+	
+	public static $LANGUES = array
+	(
+		'fr' => array
+		(
+			'mois' => array('hors du temps', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'),
+		),
+		'en' => array
+		(
+			'mois' => array('Out of time', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'),
+		),
+	);
 }
 
 $GLOBALS['dateur'] = new Dateur;
