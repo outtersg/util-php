@@ -450,6 +450,20 @@ class Dateur extends Dateur0
 
 class DateurMoinsUn extends Dateur
 {
+	public $mode = 0;
+	
+	public function affPériode($entre, $et)
+	{
+		$dateurGlobal = $GLOBALS['dateur'];
+		$GLOBALS['dateur'] = $this;
+		
+		$r = Periode::aff(Date::mef($entre), Date::mef($et), $this->mode);
+		
+		$GLOBALS['dateur'] = $dateurGlobal;
+		
+		return $r;
+	}
+	
 	protected function _affJour($date, $mode)
 	{
 		$langue = isset($this->langue) && isset(Dateur::$LANGUES[$this->langue]) ? $this->langue : 'fr';
