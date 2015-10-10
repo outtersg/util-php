@@ -454,4 +454,8 @@ class Dateur extends Dateur0
 	);
 }
 
-$GLOBALS['dateur'] = new Dateur;
+class DateurMoinsUn extends Dateur
+{
+}
+
+$GLOBALS['dateur'] = new DateurMoinsUn;
