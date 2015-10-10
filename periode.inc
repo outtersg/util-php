@@ -41,24 +41,10 @@ class Dateur0
 	{
 	$total = null;
 	$lettres = !($mode & Periode::$CHIFFRES);
-	$sepDate = $lettres ? ' ' : '/';
 		$langue = isset($this->langue) && isset(Dateur::$LANGUES[$this->langue]) ? $this->langue : 'fr';
 		$mois = Dateur::$LANGUES[$langue]['mois'];
 	if($date[0] >= 0 || $date[1] >= 0 || $date[2] >= 0)
-	{
-		$p = $mode == 2 ? 2 : 4; // Précision sur l'année. Bon, ça ne marche pas, il faudrait être plus tordu pour récupérer vraiment les deux derniers chiffres.
-		if($date[0] >= 0) $total = sprintf("%0{$p}.{$p}d", $date[0]);
-		if($lettres)
-		{
-			if($date[1] >= 0) $total = sprintf('%s%s', $mois[$date[1]], $total === null ? '' : $sepDate).$total;
-			if($date[2] >= 0) $total = sprintf('%d%s%s', $date[2], $date[2] == 1 ? 'er' : '', $total === null ? '' : $sepDate).$total;
-		}
-		else
-		{
-			if($date[1] >= 0) $total = sprintf('%02.2d%s', $date[1], $total === null ? '' : $sepDate).$total;
-			if($date[2] >= 0) $total = sprintf('%02.2d%s', $date[2], $total === null ? '' : $sepDate).$total;
-		}
-	}
+		$total = $this->_affJour($date, $mode);
 	
 	/* Trois conditions à l'écriture de l'heure en abrégé, pour qu'il n'y ait
 	 * pas d'ambiguïté::
@@ -446,16 +432,63 @@ class Dateur extends Dateur0
 		'fr' => array
 		(
 			'mois' => array('hors du temps', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'),
+			'fjourl' => 'Jn M A',
+			'fjourn' => '2J/2M/4A',
+			'num' => array('er'),
 		),
 		'en' => array
 		(
 			'mois' => array('Out of time', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'),
+			'fjourl' => 'M Jn, A',
+			'fjourn' => '2M/2J/4A',
+			'num' => array('st', 'nd', 'rd'),
+			'numautre' => 'th',
+			'numrépét' => 10,
 		),
 	);
 }
 
 class DateurMoinsUn extends Dateur
 {
+	protected function _affJour($date, $mode)
+	{
+		$langue = isset($this->langue) && isset(Dateur::$LANGUES[$this->langue]) ? $this->langue : 'fr';
+		
+		$lettres = !($mode & Periode::$CHIFFRES);
+		$sepDate = $lettres ? ' ' : '/';
+		
+		preg_match_all('!([24])?([JMA])(n)?([ ,/]*)!', self::$LANGUES[$langue]['fjour'.($lettres ? 'l' : 'n')], $corr);
+		$accu = '';
+		$sépSiProchain = null;
+		foreach($corr[2] as $n => $num)
+		{
+			$num = $num == 'J' ? 2 : ($num == 'M' ? 1 : 0);
+			if($date[$num] >= 0)
+			{
+				if($sépSiProchain)
+					$accu .= $sépSiProchain;
+				$val = $date[$num];
+				if($lettres && $num == 1)
+					$val = self::$LANGUES[$langue]['mois'][$val];
+				else if($corr[1][$n])
+					$val = sprintf('%0'.$corr[1][$n].'d', $val);
+				if($corr[3][$n])
+				{
+					$nièmes = self::$LANGUES[$langue]['num'];
+					$nième = $date[$num] - 1;
+					if(isset(self::$LANGUES[$langue]['numrépét']))
+						$nième %= self::$LANGUES[$langue]['numrépét'];
+					if(isset($nièmes[$nième]))
+						$val .= $nièmes[$nième];
+					else if(isset(self::$LANGUES[$langue]['numautre']))
+						$val .= self::$LANGUES[$langue]['numautre'];
+				}
+				$accu .= $val;
+				$sépSiProchain = $corr[4][$n];
+			}
+		}
+		return $accu;
+	}
 }
 
 $GLOBALS['dateur'] = new DateurMoinsUn;
