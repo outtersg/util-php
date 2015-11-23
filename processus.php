@@ -58,8 +58,11 @@ class Processus
 		{
 			$sortiesModif = $sorties; // Copie de tableau.
 			if($nFlux = stream_select($sortiesModif, $entrees, $erreurs, 1))
-				foreach($sortiesModif as $fd => $flux)
+				foreach($sortiesModif as $flux)
 				{
+					foreach($sorties as $fd => $fluxSurveillé)
+						if($fluxSurveillé == $flux)
+							break;
 					$bloc = fread($flux, 0x4000);
 					$this->_sortie($fd, $bloc);
 					if(strlen($bloc) == 0) // Fin de fichier, on arrête de le surveiller.
