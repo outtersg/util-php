@@ -173,6 +173,9 @@ class Chargeur
 		if($resultat instanceof Compo)
 		{
 			method_exists($resultat, 'notifChargeur') && $resultat->notifChargeur($this);
+			if(method_exists($resultat, 'entrerAvecAttrs'))
+				$resultat->entrerAvecAttrs($attrs);
+			else
 			$resultat->entrer();
 		}
 	}
