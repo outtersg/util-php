@@ -51,7 +51,7 @@ class HTOpus
 		{
 			// Analyse textuelle de la ligne.
 			
-			if(!preg_match('/^([ 	]*)([^ :]*)([ 	]+[^ :]+=(?:[^ :]*|"[^"]*"))*(:)? *(#.*)?$/', $ligne, $r))
+			if(!preg_match('/^([ 	]*)([^ :#]*)((?:[ 	]+[^ :]+=(?:[^ :]*|"[^"]*"))*)(:)? *(#.*)?$/', $ligne, $r))
 			{
 				$errs[] = 'ligne '.$ligne.': ininterprétable ('.$ligne.')';
 				continue;
@@ -73,7 +73,7 @@ class HTOpus
 			}
 			/* À FAIRE: savoir aussi détecter les incohérences d'espacement. Ceci peut se faire au troisième niveau (au premier, on détermine le 0, car pour des raisons d'indentation le niveau 0 peut très bien commencer ailleurs qu'au caractère 0; au second, la différence d'avec le premier nous donne l'indentation standard. Au troisième, on peut commencer à gueuler s'il y a incohérence). */
 			$élément = $r[2];
-			preg_match_all('/[    ]+([^ ]+)=(?:([^ :]*)|"([^"]*)")/', $r[3], $résAttrs);
+			preg_match_all('/[	 ]+([^ ]+)=(?:([^ :]*)|"([^"]*)")/', $r[3], $résAttrs);
 			$attrs = array();
 			foreach($résAttrs[0] as $numRésAttrs => $rien)
 				$attrs[$résAttrs[1][$numRésAttrs]] = $résAttrs[2][$numRésAttrs] ? $résAttrs[2][$numRésAttrs] : $résAttrs[3][$numRésAttrs];
