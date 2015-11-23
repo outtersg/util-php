@@ -154,6 +154,14 @@ class Dodo
 		$this->_actuel = & $this->document;
 	}
 	
+	public function lire($chaîne)
+	{
+		$h = new HTOpus;
+		$h->abonner($this);
+		$h->lire($chaîne);
+		return $this->document;
+	}
+	
 	public function entrerDans($élément, $attrs)
 	{
 		$this->_pile[] = & $this->_actuel;
