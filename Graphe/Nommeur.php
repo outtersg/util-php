@@ -25,12 +25,25 @@ namespace eu_outters_guillaume\Util\Graphe;
 
 class Nommeur
 {
+	const INF_SUP_OU_MOINS = '<>-';
+	const INF = '<';
+	const MOINS = '-';
+	
+	public $mode = self::INF_SUP_OU_MOINS;
+	
 	public function inverse($quoi)
 	{
+		switch($this->mode)
+		{
+			case self::INF:
+				return substr($quoi, 0, 1) == '<' ? substr($quoi, 1) : '<'.$quoi;
+			case self::INF_SUP_OU_MOINS:
 		if(substr($quoi, 0, 1) == '<')
 			return substr($quoi, 1).'>';
 		else if(substr($quoi, -1) == '>')
 			return '<'.substr($quoi, 0, -1);
+				break;
+		}
 		
 		return substr($quoi, 0, 1) == '-' ? substr($quoi, 1) : '-'.$quoi;
 	}

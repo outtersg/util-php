@@ -25,6 +25,12 @@ namespace eu_outters_guillaume\Util\Graphe;
 
 class Lien
 {
+	/* À FAIRE: pouvoir donner au lien une Classe destination autre que sa source.*/
+	/* À FAIRE: contrôle de cohérence Classe départ / Classe arrivée (sur une répétition: départ == arrivée; sur une chaîne: arrivée n == départ n + 1; sur un OU: tous départs identiques, toutes arrivées identiques). Ceci doit être optionnel, car certains veulent pouvoir travailler hors hiérarchie de classes (avec de simples interfaces, voire des interfaces implicites du moment que l'on a tel champ). */
+	/* À FAIRE: LienSql: optimiser le rendu. where id in (select id from toto) peut devenir inner join toto on id = toto.id dans certaines conditions:
+	 * - la cardinalité est 1 à 1.
+	 * - ou l'on se fiche de renvoyer trop de résultats (ex.: un simple peutIl, ou bien utilisé dans le cadre d'un Lien composite, qui fera son unicité en bout de chaîne).
+	 */
 	public function __construct(Classe $graphe)
 	{
 		$this->_graphe = $graphe;
@@ -36,6 +42,7 @@ class Lien
 	}
 	
 	protected $_inverse;
+	public $args = array();
 }
 
 class LienSimple extends Lien
@@ -43,7 +50,7 @@ class LienSimple extends Lien
 	public function __construct(Classe $graphe, $noms)
 	{
 		parent::__construct($graphe);
-		$this->noms = $noms;
+		$this->noms = is_array($noms) ? $noms : array($noms);
 	}
 	
 	public function __toString()
@@ -65,12 +72,13 @@ class LienSimple extends Lien
 		return false;
 	}
 	
-	public function quiPeutIl($sujet)
+	public function quiPeutIl($sujets)
 	{
 		$r = array();
-		foreach($this->noms as $nom)
-			if(isset($sujet->liens[$nom]))
-				$r += $sujet->liens[$nom];
+		foreach((is_array($sujets) ? $sujets : array($sujets)) as $sujet)
+			foreach($this->noms as $nom)
+				if(isset($sujet->liens[$nom]))
+					$r += $sujet->liens[$nom];
 		return $r;
 	}
 	
@@ -92,7 +100,7 @@ class LienChaîne extends Lien
 	public function __toString()
 	{
 		$r = array();
-		foreach($this->chaîne as $lien)
+		foreach($this->args as $lien)
 			$r[] = $lien->__toString();
 		return '('.implode(' ', $r).')';
 	}
@@ -102,8 +110,8 @@ class LienChaîne extends Lien
 		$this->_graphe->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
 		
 		$possibles = array($sujet);
-		$n = count($this->chaîne);
-		foreach($this->chaîne as $élément)
+		$n = count($this->args);
+		foreach($this->args as $élément)
 		{
 			if(--$n == 0)
 			{
@@ -130,13 +138,61 @@ class LienChaîne extends Lien
 		if(!isset($this->_inverse))
 		{
 			$this->_inverse = new LienChaîne($this->_graphe);
-			foreach(array_reverse($this->chaîne) as $lien)
-				$this->_inverse->chaîne[] = $lien->inverse();
+			foreach(array_reverse($this->args) as $lien)
+				$this->_inverse->args[] = $lien->inverse();
 		}
 		return $this->_inverse;
 	}
+}
+
+class LienRépét extends Lien
+{
+	public function __toString()
+	{
+		$r = '('.$this->args[0].')';
+		$min = isset($this->min) ? $this->min : 0;
+		$max = isset($this->max) ? $this->max : '∞';
+		$minMax = '{'.$min.','.$max.'}';
+		switch($minMax)
+		{
+			case '{0,∞}': $minMax = '*'; break;
+			case '{1,∞}': $minMax = '+'; break;
+		}
+		return $r.$minMax;
+	}
 	
-	public $chaîne = array();
+	public function quiPeutIl($sujets)
+	{
+		if(!is_array($sujets))
+			$sujets = array(spl_object_hash($sujets) => $sujets);
+		$n = -1;
+		$ceTour = $sujets;
+		$valides = array();
+		while(true)
+		{
+			if(++$n >= (isset($this->min) ? $this->min : 0))
+				$valides += $ceTour;
+			if(isset($this->max) && $n >= $this->max)
+				break;
+			$ceTour = $this->args[0]->quiPeutIl($ceTour);
+			// Si on n'a plus de nouveauté, on quitte.
+			if(!count(array_diff_key($ceTour, $valides)))
+				break;
+		}
+		
+		return $valides;
+	}
+	
+	public function inverse()
+	{
+		if(!isset($this->_inverse))
+		{
+			$this->_inverse = new LienRépét($this->_graphe);
+			foreach(array_reverse($this->args) as $lien)
+				$this->_inverse->args[] = $lien->inverse();
+		}
+		return $this->_inverse;
+	}
 }
 
 class LienOu extends Lien
@@ -144,7 +200,7 @@ class LienOu extends Lien
 	public function __toString()
 	{
 		$r = array();
-		foreach($this->chemins as $lien)
+		foreach($this->args as $lien)
 			$r[] = $lien->__toString();
 		return implode(' | ', $r);
 	}
@@ -153,10 +209,20 @@ class LienOu extends Lien
 	{
 		$this->_graphe->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
 		
-		foreach($this->chemins as $chemin)
+		foreach($this->args as $chemin)
 			if($chemin->peutIl($sujet, $cod))
 				return true;
 		return false;
+	}
+	
+	public function quiPeutIl($sujets)
+	{
+		if(!is_array($sujets))
+			$sujets = array(spl_object_hash($sujets) => $sujets);
+		$r = array();
+		foreach($this->args as $chemin)
+			$r += $chemin->quiPeutIl($sujets);
+		return $r;
 	}
 	
 	public function inverse()
@@ -164,13 +230,11 @@ class LienOu extends Lien
 		if(!isset($this->_inverse))
 		{
 			$this->_inverse = new LienOu($this->_graphe);
-			foreach($this->chemins as $lien)
-				$this->_inverse->chemins[] = $lien->inverse();
+			foreach($this->args as $lien)
+				$this->_inverse->args[] = $lien->inverse();
 		}
 		return $this->_inverse;
 	}
-	
-	public $chemins = array();
 }
 
 /**

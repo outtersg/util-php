@@ -37,11 +37,11 @@ require_once dirname(__FILE__).'/Lien.php';
  */
 class Classe
 {
-	public function __construct($parent = null)
+	public function __construct($parent = null, $nommeur = null)
 	{
 		$this->_parent = $parent;
 		$this->_compilo = new Compilo;
-		$this->nommeur = new Nommeur;
+		$this->nommeur = isset($nommeur) ? $nommeur : new Nommeur;
 		$this->traceur = new Traceur;
 	}
 	

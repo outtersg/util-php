@@ -7,6 +7,7 @@ require_once dirname(__FILE__).'/../Graphe/Lien.php';
 
 use eu_outters_guillaume\Util\Graphe\Classe;
 use eu_outters_guillaume\Util\Graphe\Nœud;
+use eu_outters_guillaume\Util\Graphe\Nommeur;
 
 class NœudTest extends Nœud
 {
@@ -125,6 +126,45 @@ class AutTest extends PHPUnit_Framework_TestCase
 		
 		$gui->diffuser($pain1, array($fo, $fd));
 		$this->assertFalse($po->peutIl('lire', $pain1));
+	}
+	
+	public function testSousGroupes()
+	{
+		/* À FAIRE: ensemble dans lequel chaque membre d'un groupe peut publier sur son mini-site, les membres des groupes supérieurs pouvant rapatrier des articles des sous-groupes. */
+	}
+	
+	public function testHiérarchie()
+	{
+		$graphe = new Classe;
+		$graphe->nommeur->mode = Nommeur::INF;
+		NœudTest::$Graphe = $graphe;
+		
+		$graphe->définir('signer', '(* <subordonné) <affecté');
+		$graphe->définir('planifier', '(secrétaire | (* <subordonné)) <agenda');
+		
+		$dupuis = new Employé('Dupuis');
+		$fantasio = new Employé('Fantasio');
+		$sonia = new Employé('Sonia');
+		$gaston = new Employé('Gaston');
+		$fantasio->est('subordonné', $dupuis);
+		$gaston->est('subordonné', $fantasio);
+		$sonia->est('secrétaire', $fantasio);
+		
+		$contrat = new Truc('De Maesmaker');
+		$contrat->est('affecté', $fantasio);
+		
+		$this->assertTrue($fantasio->peutIl('signer', $contrat));
+		$this->assertTrue($dupuis->peutIl('signer', $contrat));
+		$this->assertFalse($gaston->peutIl('signer', $contrat));
+		$this->assertFalse($sonia->peutIl('signer', $contrat));
+		
+		$agenda = new Truc('Agenda pro de Fantasio');
+		$agenda->est('agenda', $fantasio);
+		
+		$this->assertTrue($fantasio->peutIl('planifier', $agenda));
+		$this->assertTrue($dupuis->peutIl('planifier', $agenda));
+		$this->assertFalse($gaston->peutIl('planifier', $agenda));
+		$this->assertTrue($sonia->peutIl('planifier', $agenda));
 	}
 }
 
