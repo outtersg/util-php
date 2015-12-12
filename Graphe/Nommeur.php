@@ -29,7 +29,7 @@ class Nommeur
 	const INF = '<';
 	const MOINS = '-';
 	
-	public $mode = self::INF_SUP_OU_MOINS;
+	public $mode = self::INF;
 	
 	public function inverse($quoi)
 	{

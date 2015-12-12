@@ -78,6 +78,7 @@ class AutTest extends PHPUnit_Framework_TestCase
 		 */
 		
 		$graphe = new Classe;
+		$graphe->nommeur->mode = Nommeur::INF_SUP_OU_MOINS;
 		NœudTest::$Graphe = $graphe;
 		
 		$graphe->définir('lecteur', 'membre> <publié', 'lisiblePar'); // membreDe, publiéDans.
@@ -136,7 +137,6 @@ class AutTest extends PHPUnit_Framework_TestCase
 	public function testHiérarchie()
 	{
 		$graphe = new Classe;
-		$graphe->nommeur->mode = Nommeur::INF;
 		NœudTest::$Graphe = $graphe;
 		
 		$graphe->définir('signer', '(* <subordonné) <affecté');
