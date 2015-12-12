@@ -281,14 +281,6 @@ class Nœud
 	public function peutIl($quoi, $qui)
 	{
 		$trace = $this->_classe->trace($this.' peut-il '.$quoi.' '.$qui.'?');
-		// Déjà si on l'a en relation directe on ne se pose presque pas la question.
-		if(isset($this->liens[$quoi]))
-			if(isset($this->liens[$quoi][spl_object_hash($qui)]))
-			{
-				$trace->clore('oui, en direct');
-				return true;
-			}
-		// Bon, donc il va falloir rechercher par le jeu des relations.
 		$r = $this->_classe->peutIl($this, $quoi, $qui);
 		$trace->clore();
 		return $r;
@@ -301,8 +293,6 @@ class Nœud
 	
 	public function quiPeutIl($quoi)
 	{
-		if(isset($this->liens[$quoi]))
-			return $this->liens[$quoi];
 		return $this->_classe->quiPeutIl($this, $quoi);
 	}
 	
