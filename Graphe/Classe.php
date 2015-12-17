@@ -63,6 +63,11 @@ class Classe
 		return $this->_liens[$nomLien];
 	}
 	
+	public function relation($nom, $cible = null)
+	{
+		$this->trouver($nom)->cible = isset($cible) ? $cible : $this;
+	}
+	
 	public function trouver($nomLien, $créerSiBesoin = true)
 	{
 		if(!isset($this->_liens[$nomLien]) && isset($this->_parent) && ($lien = $this->_parent->trouver($nomLien, false)))

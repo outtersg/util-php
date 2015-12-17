@@ -32,6 +32,13 @@ class Truc extends NœudTest
 
 class Gusse extends NœudTest
 {
+	public function __construct($nom)
+	{
+		parent::__construct($nom);
+		foreach(array('membre>') as $membre)
+			$this->$membre = array();
+	}
+	
 	public function publier($fournils, $nom)
 	{
 		$pain = new Truc($nom);

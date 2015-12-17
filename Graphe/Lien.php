@@ -61,9 +61,16 @@ class LienSimple extends Lien
 	public function peutIl($sujet, $cod)
 	{
 		$this->_graphe->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
+		$idCod = spl_object_hash($cod);
 		foreach($this->noms as $nom)
-			if(isset($sujet->liens[$nom]))
-				if(isset($sujet->liens[$nom][spl_object_hash($cod)]))
+			if(isset($sujet->$nom))
+				if(is_array($sujet->$nom))
+				{
+					if(isset($sujet->{$nom}[$idCod]))
+						return true;
+					// À FAIRE: accepter aussi que les membres ne soient pas indexés par leur OID.
+				}
+				else if($sujet->$nom === $cod)
 					return true;
 				else
 					$this->_graphe->trace("a une relation $nom mais pas pour $cod");
@@ -74,11 +81,16 @@ class LienSimple extends Lien
 	
 	public function quiPeutIl($sujets)
 	{
+		$trace = $this->_graphe->trace(get_class($this).': '.count($sujets).' élément(s): qui peu(ven)t-il(s) '.$this.'?');
 		$r = array();
 		foreach((is_array($sujets) ? $sujets : array($sujets)) as $sujet)
 			foreach($this->noms as $nom)
-				if(isset($sujet->liens[$nom]))
-					$r += $sujet->liens[$nom];
+				if(isset($sujet->$nom))
+					if(is_array($sujet->$nom))
+						$r += $sujet->$nom;
+					else
+						$r[spl_object_hash($sujet->$nom)] = $sujet->$nom;
+		$trace->clore(count($r).' élément(s)');
 		return $r;
 	}
 	
@@ -107,7 +119,7 @@ class LienChaîne extends Lien
 	
 	public function peutIl($sujet, $cod)
 	{
-		$this->_graphe->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
+		$trace = $this->_graphe->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
 		
 		$possibles = array($sujet);
 		$n = count($this->args);
@@ -117,7 +129,10 @@ class LienChaîne extends Lien
 			{
 				foreach($possibles as $possible)
 					if($élément->peutIl($possible, $cod))
+					{
+						$trace->clore('oui');
 						return true;
+					}
 			}
 			else
 			{
@@ -126,10 +141,14 @@ class LienChaîne extends Lien
 					$suivants += $élément->quiPeutIl($possible);
 				
 				if(!count($suivants))
+				{
+					$trace->clore('non');
 					return false;
+				}
 				$possibles = $suivants;
 			}
 		}
+		$trace->clore('non');
 		return false;
 	}
 	
@@ -265,7 +284,15 @@ class Nœud
 			$quoiInverse = $this->_classe->nommeur->inverse($quoi);
 			$qui->peut($quoiInverse, $this, false);
 		}
-		$this->liens[$quoi][spl_object_hash($qui)] = $qui;
+		if(!isset($this->$quoi))
+			$this->$quoi = array();
+		if(is_array($this->$quoi))
+		{
+			$oid = spl_object_hash($qui);
+			$this->{$quoi}[$oid] = $qui;
+		}
+		else
+			$this->$quoi = $qui;
 	}
 	
 	public function nePeutPas($quoi, $qui, $inverser = true)
@@ -275,7 +302,10 @@ class Nœud
 			$quoiInverse = $this->_classe->nommeur->inverse($quoi);
 			$qui->nePeutPas($quoiInverse, $this, false);
 		}
-		unset($this->liens[$quoi][spl_object_hash($qui)]);
+		if(isset($this->$quoi) && is_array($this->$quoi))
+			unset($this->{$quoi}[spl_object_hash($qui)]);
+		else if(isset($this->$quoi) && $this->$quoi === $qui)
+			unset($this->$quoi);
 	}
 	
 	public function peutIl($quoi, $qui)
