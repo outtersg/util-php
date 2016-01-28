@@ -113,7 +113,13 @@ class LienSimple extends Lien
 	
 	public function __toString()
 	{
+		if(isset($this->noms))
 		return count($this->noms) > 1 ? '['.implode('|', $this->noms).']' : $this->noms[0];
+		
+		if(isset($this->_inverse) && isset($this->_inverse->noms))
+			return '<('.$this->_inverse.')';
+		
+		return '<'.get_class($this).'>';
 	}
 	
 	public function peutIl($sujet, $cod)
