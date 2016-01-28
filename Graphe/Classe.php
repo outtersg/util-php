@@ -45,6 +45,14 @@ class Classe
 		$this->traceur = new Traceur;
 	}
 	
+	public function __toString()
+	{
+		$r = get_class($this);
+		if(isset($this->nom))
+			$r .= ' '.$this->nom;
+		return $r;
+	}
+	
 	public function trace($quoi, $niveau = null)
 	{
 		return isset($this->_parent) ? $this->_parent->trace($quoi, $niveau) : $this->traceur->trace($quoi, $niveau);
