@@ -48,6 +48,13 @@ class Lien
 		return $source;
 	}
 	
+	public function peutIl($sujet, $cod)
+	{
+		// Implémentation par défaut: un quiPeutIl, et on recherche dans les résultats.
+		$cods = $this->quiPeutIl($sujet);
+		return isset($cods[spl_object_hash($cod)]);
+	}
+	
 	protected $_inverse;
 	public $args = array();
 }
