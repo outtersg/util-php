@@ -108,6 +108,7 @@ class LienSimple extends Lien
 	{
 		if(isset($noms))
 		$this->noms = is_array($noms) ? $noms : array($noms);
+		$this->indexé = false; // Par défaut, on ne peut reposer sur le fait que les objets liés sont indexés par leur OID.
 	}
 	
 	public function __toString()
@@ -123,9 +124,14 @@ class LienSimple extends Lien
 			if(isset($sujet->$nom))
 				if(is_array($sujet->$nom))
 				{
+					if($this->indexé)
+					{
 					if(isset($sujet->{$nom}[$idCod]))
 						return true;
-					// À FAIRE: accepter aussi que les membres ne soient pas indexés par leur OID.
+					}
+					else foreach($sujet->$nom as $possible)
+						if($possible === $cod)
+							return true;
 				}
 				else if($sujet->$nom === $cod)
 					return true;
@@ -144,7 +150,15 @@ class LienSimple extends Lien
 			foreach($this->noms as $nom)
 				if(isset($sujet->$nom))
 					if(is_array($sujet->$nom))
+						if($this->indexé)
+						{
 						$r += $sujet->$nom;
+						}
+						else
+						{
+							foreach($sujet->$nom as $possible)
+								$r[spl_object_hash($possible)] = $possible;
+						}
 					else
 						$r[spl_object_hash($sujet->$nom)] = $sujet->$nom;
 		$trace->clore(count($r).' élément(s)');
