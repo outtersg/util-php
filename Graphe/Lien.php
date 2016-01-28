@@ -255,6 +255,17 @@ class LienChaîne extends Lien
 		return false;
 	}
 	
+	public function quiPeutIl($sujets)
+	{
+		$trace = $this->source->trace(get_class($this).': qui '.count($sujets).' éléments peuvent-ils?');
+		if(!is_array($sujets))
+			$sujets = array(spl_object_hash($sujets) => $sujets);
+		foreach($this->args as $élément)
+			$sujets = $élément->quiPeutIl($sujets);
+		$trace->clore('-> '.count($sujets).' réponses');
+		return $sujets;
+	}
+	
 	public function inverse()
 	{
 		if(!isset($this->_inverse))
