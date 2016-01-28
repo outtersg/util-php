@@ -51,6 +51,8 @@ class Compilo
 		(
 			'|' => 7,
 			'*' => 3,
+			'+' => 3,
+			'?' => 3,
 		);
 		
 		/* Où va-t-on découper? On recherche le point de découpe le plus prioritaire. */
@@ -100,13 +102,21 @@ class Compilo
 				/* À FAIRE: regrouper certains opérateurs, type |: a|b|c, c'est tout autant |(a, b, c) que |(a, |(b, c)). Attention, ça ne marche pas si un autre opérateur de même priorité intervient, par exemple a|b&c|d. */
 				break;
 			case '*':
+			case '+':
+			case '?':
 				// En début de bloc, l'* porte sur tout le bloc. Sinon sur son prédécesseur.
 				if($posPrioMax == 0)
 				{
 					$compil = new LienRépét;
 					$compil->args = array($this->_assembler($conteneur, array_slice($bouts, 1)));
-					$compil->min = 0;
-					$compil->max = null;
+					switch($bouts[$posPrioMax][1])
+					{
+						case '*': $minMax = array(0, null); break;
+						case '+': $minMax = array(1, null); break;
+						case '?': $minMax = array(0, 1); break;
+							
+					}
+					list($compil->min, $compil->max) = $minMax;
 					return $compil;
 				}
 				else // Le plus simple dans ce cas est de réordonner la source et relancer la compil.
@@ -128,7 +138,7 @@ class Compilo
 		$r = array();
 		
 		/* À FAIRE: inclure le caractère de négation proposé par le Nommeur. Pour l'heure, la négation est gérée comme faisant partie du nom, donc interprétée en toute dernière instance. Cependant on pourrait vouloir faire des -(père père), qui devraient donner un (fils fils): le - n'est pas au niveau du Lien unitaire. */
-		preg_match_all('/([()*+|])|([ 	]+)|([^()*+| 	]+)/', $chaîne, $découpage, PREG_OFFSET_CAPTURE);
+		preg_match_all('/([()*+?|])|([ 	]+)|([^()*+?| 	]+)/', $chaîne, $découpage, PREG_OFFSET_CAPTURE);
 		$types = array(1 => self::SYNTAXE, 2 => self::ESPACE, 3 => self::AUTRE);
 		
 		$dernièrePos = 0;
