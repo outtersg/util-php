@@ -121,8 +121,8 @@ class Compilo
 				}
 				else // Le plus simple dans ce cas est de réordonner la source et relancer la compil.
 				{
-					$bout = array(self::BLOC, array($bouts[$posPrioMax - 1]), null);
-					array_splice($bouts, $posPrioMax, 2, array($bout));
+					$bout = array(self::BLOC, array($bouts[$posPrioMax], $bouts[$posPrioMax - 1]), null);
+					array_splice($bouts, $posPrioMax - 1, 2, array($bout));
 					return $this->_assembler($conteneur, $bouts);
 				}
 				break;
