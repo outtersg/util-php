@@ -307,6 +307,7 @@ class LienRépét extends Lien
 		{
 			case '{0,∞}': $minMax = '*'; break;
 			case '{1,∞}': $minMax = '+'; break;
+			case '{0,1}': $minMax = '?'; break;
 		}
 		return $r.$minMax;
 	}
