@@ -25,31 +25,81 @@ namespace eu_outters_guillaume\Util\Graphe;
 
 class Lien
 {
-	/* À FAIRE: pouvoir donner au lien une Classe destination autre que sa source.*/
 	/* À FAIRE: contrôle de cohérence Classe départ / Classe arrivée (sur une répétition: départ == arrivée; sur une chaîne: arrivée n == départ n + 1; sur un OU: tous départs identiques, toutes arrivées identiques). Ceci doit être optionnel, car certains veulent pouvoir travailler hors hiérarchie de classes (avec de simples interfaces, voire des interfaces implicites du moment que l'on a tel champ). */
 	/* À FAIRE: LienSql: optimiser le rendu. where id in (select id from toto) peut devenir inner join toto on id = toto.id dans certaines conditions:
 	 * - la cardinalité est 1 à 1.
 	 * - ou l'on se fiche de renvoyer trop de résultats (ex.: un simple peutIl, ou bien utilisé dans le cadre d'un Lien composite, qui fera son unicité en bout de chaîne).
 	 */
-	public function __construct(Classe $graphe)
+	public function cible($source = null)
 	{
-		$this->_graphe = $graphe;
+		if(!isset($this->source))
+			$this->source = $source;
+		if(!isset($this->cible))
+			$this->cible = $this->_cible($source ? $source : $this->source);
+		return $this->cible;
 	}
 	
-	public function inverse()
+	protected function _cible($source)
 	{
-		throw new \Exception(get_class($this)." ne sait pas se retourner comme une vieille chaussette");
+		// Si on a un inverse, peut-être peut-il nous dire de qui il part: on va vers ce qui.
+		if(isset($this->_inverse) && isset($this->_inverse->source))
+			return $this->_inverse->source;
+		// Implémentation par défaut: la relation est entre objets de même classe.
+		return $source;
 	}
 	
 	protected $_inverse;
 	public $args = array();
 }
 
+class LienSymbolique extends Lien
+{
+	public function __construct($noms = null)
+	{
+		$this->noms = !isset($noms) || is_array($noms) ? $noms : array($noms);
+	}
+	
+	public function __toString()
+	{
+		return isset($this->noms) ? (count($this->noms) > 1 ? '['.implode('|', $this->noms).']' : $this->noms[0]) : get_class($this).' '.spl_object_hash($this);
+	}
+	
+	public function _cible($source)
+	{
+		if(!isset($this->noms) || !count($this->noms))
+			throw new \Exception('Oups! LienSymbolique sans nom');
+		foreach($this->noms as $nom)
+			if(($résolu = $source->trouver($nom, false)))
+				break;
+		// Si on n'a pas trouvé, on se résoud à une création.
+		if(!$résolu)
+			$résolu = true;
+		// Et on retourne sur la Classe, pour lui permettre d'enregistrer le machin trouvé sous tous les noms déclarés.
+		foreach($this->noms as $nom)
+		{
+			$résoluBis = $source->trouver($nom, $résolu);
+			if(!$résoluBis)
+				throw new \Exception('Oups! Impossible d\'obtenir un LienSimple de '.$source.' pour '.$nom);
+			if($résolu === true)
+				$résolu = $résoluBis;
+			else if($résoluBis !== $résolu)
+				throw new Exception('Oups! Deux liens différents ont le nom '.$nom.' aux yeux de '.$source);
+		}
+		$this->args = array($résolu);
+		return $résolu->cible($source);
+	}
+	
+	public function __call($méthode, $args)
+	{
+		return call_user_func_array(array($this->args[0], $méthode), $args);
+	}
+}
+
 class LienSimple extends Lien
 {
-	public function __construct(Classe $graphe, $noms)
+	public function __construct($noms = null)
 	{
-		parent::__construct($graphe);
+		if(isset($noms))
 		$this->noms = is_array($noms) ? $noms : array($noms);
 	}
 	
@@ -60,7 +110,7 @@ class LienSimple extends Lien
 	
 	public function peutIl($sujet, $cod)
 	{
-		$this->_graphe->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
+		$this->source->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
 		$idCod = spl_object_hash($cod);
 		foreach($this->noms as $nom)
 			if(isset($sujet->$nom))
@@ -73,15 +123,15 @@ class LienSimple extends Lien
 				else if($sujet->$nom === $cod)
 					return true;
 				else
-					$this->_graphe->trace("a une relation $nom mais pas pour $cod");
+					$this->source->trace("a une relation $nom mais pas pour $cod");
 			else
-				$this->_graphe->trace("ne connaît pas la relation $nom");
+				$this->source->trace("ne connaît pas la relation $nom");
 		return false;
 	}
 	
 	public function quiPeutIl($sujets)
 	{
-		$trace = $this->_graphe->trace(get_class($this).': '.count($sujets).' élément(s): qui peu(ven)t-il(s) '.$this.'?');
+		$trace = $this->source->trace(get_class($this).': '.count($sujets).' élément(s): qui peu(ven)t-il(s) '.$this.'?');
 		$r = array();
 		foreach((is_array($sujets) ? $sujets : array($sujets)) as $sujet)
 			foreach($this->noms as $nom)
@@ -94,14 +144,40 @@ class LienSimple extends Lien
 		return $r;
 	}
 	
+	public function cible($source = null)
+	{
+		$r = parent::cible($source);
+		
+		// C'est le moment de la résolution de noms!
+		
+		if(!isset($this->noms) && isset($this->_inverse))
+		{
+			$noms = array();
+			foreach($this->_inverse->noms as $nomInverse)
+				$noms[] = $r->nommeur->inverse($nomInverse);
+			$this->noms = $noms;
+		}
+		
+		// Un LienSimple est implicitement déclaré dans sa Classe.
+		
+/*
+		if(isset($this->noms))
+			foreach($this->noms as $nom)
+				$source->définir($nom, $this);
+*/
+		// À FAIRE: inscrire de même le lien retour; et combiner les divers LienSimple pour n'en avoir qu'un.
+		
+		// Retour.
+		
+		return $r;
+	}
+	
 	public function inverse()
 	{
 		if(!isset($this->_inverse))
 		{
-			$nomsInverses = array();
-			foreach($this->noms as $nom)
-				$nomsInverses[] = $this->_graphe->nommeur->inverse($nom);
-			$this->_inverse = new LienSimple($this->_graphe, $nomsInverses);
+			$this->_inverse = new LienSimple;
+			$this->_inverse->_inverse = $this;
 		}
 		return $this->_inverse;
 	}
@@ -119,7 +195,7 @@ class LienChaîne extends Lien
 	
 	public function peutIl($sujet, $cod)
 	{
-		$trace = $this->_graphe->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
+		$trace = $this->source->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
 		
 		$possibles = array($sujet);
 		$n = count($this->args);
@@ -156,11 +232,28 @@ class LienChaîne extends Lien
 	{
 		if(!isset($this->_inverse))
 		{
-			$this->_inverse = new LienChaîne($this->_graphe);
+			$this->_inverse = new LienChaîne;
+			$this->_inverse->_inverse = $this;
 			foreach(array_reverse($this->args) as $lien)
 				$this->_inverse->args[] = $lien->inverse();
 		}
 		return $this->_inverse;
+	}
+	
+	protected function _cible($source)
+	{
+		$dernier = $this->source = $source;
+		foreach($this->args as $num => $élément)
+		{
+			if($élément instanceof Référence)
+			{
+				$élément = $this->args[$num] = $dernier->trouver($élément->noms);
+			}
+			if(isset($élément->source) && $élément->source !== $dernier)
+				throw new \Exception('Oups! LienChaîne "'.$this.'": l\'élément '.$num.' "'.$élément.'" part de '.$élément->source.' plutôt que de '.$dernier.', point d\'arrivée du précédent');
+			$dernier = $élément->cible($dernier);
+		}
+		return $dernier;
 	}
 }
 
@@ -206,11 +299,20 @@ class LienRépét extends Lien
 	{
 		if(!isset($this->_inverse))
 		{
-			$this->_inverse = new LienRépét($this->_graphe);
+			$this->_inverse = new LienRépét;
+			$this->_inverse->_inverse = $this;
 			foreach(array_reverse($this->args) as $lien)
 				$this->_inverse->args[] = $lien->inverse();
 		}
 		return $this->_inverse;
+	}
+	
+	protected function _cible($source)
+	{
+		$cible = $this->args[0]->cible($source);
+		if($this->args[0]->source !== $cible)
+			throw new \Exception('Oups! LienRépét: l\'élément répété '.$this->args[0].' doit avoir même cible que source');
+		return $cible;
 	}
 }
 
@@ -226,7 +328,7 @@ class LienOu extends Lien
 	
 	public function peutIl($sujet, $cod)
 	{
-		$this->_graphe->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
+		$this->source->trace(get_class($this).': '.$sujet.' peut-il '.$this.' '.$cod.'?');
 		
 		foreach($this->args as $chemin)
 			if($chemin->peutIl($sujet, $cod))
@@ -248,11 +350,24 @@ class LienOu extends Lien
 	{
 		if(!isset($this->_inverse))
 		{
-			$this->_inverse = new LienOu($this->_graphe);
+			$this->_inverse = new LienOu;
+			$this->_inverse->_inverse = $this;
 			foreach($this->args as $lien)
 				$this->_inverse->args[] = $lien->inverse();
 		}
 		return $this->_inverse;
+	}
+	
+	protected function _cible($source)
+	{
+		$cible = null;
+		foreach($this->args as $num => $élément)
+			if(!isset($cible))
+				$cible = $élément->cible($source);
+			else
+				if($élément->cible($source) !== $cible)
+					throw new \Exception('Oups! LienOu: incohérence sur la cible entre les différents chemins');
+		return $cible;
 	}
 }
 
@@ -327,6 +442,7 @@ class Nœud
 	}
 	
 	public $liens = array();
+	protected $_classe;
 }
 
 ?>

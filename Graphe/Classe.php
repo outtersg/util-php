@@ -50,22 +50,39 @@ class Classe
 		return isset($this->_parent) ? $this->_parent->trace($quoi, $niveau) : $this->traceur->trace($quoi, $niveau);
 	}
 	
-	public function définir($nomLien, $définition = null, $nomLienInverse = null)
+	public function définir($nomLien, $définition = null, $nomLienInverse = null, $classeCible = null)
 	{
-		$lien = $this->_compilo->compiler($this, isset($définition) ? $définition : array($nomLien));
+		if(is_object($définition))
+			$lien = $définition;
+		else
+		$lien = isset($définition) ? $this->_compilo->compiler($this, $définition) : $this->_compilo->compilerSimple($nomLien);
+		if(isset($classeCible))
+			$lien->cible = $classeCible;
 		
 		$this->_liens[$nomLien] = $lien;
+		
+		// Résolution de liens.
+		
+		$classeCible = $lien->cible($this);
+		
+		// Si on est déjà dans la création de l'inverse, nul besoin de créer l'inverse de l'inverse.
+		
+		if(is_object($définition))
+			return;
+		
+		// Création de l'inverse.
+		
 		$lienInverse = $lien->inverse();
-		$this->_liens[$this->nommeur->inverse($nomLien)] = $lienInverse;
+		$classeCible->définir($this->nommeur->inverse($nomLien), $lienInverse, null, $this);
 		if(isset($nomLienInverse))
-			$this->_liens[$nomLienInverse] = $lienInverse;
+			$classeCible->définir($nomLienInverse, $lienInverse, null, $this);
 		
 		return $this->_liens[$nomLien];
 	}
 	
 	public function relation($nom, $cible = null)
 	{
-		$this->trouver($nom)->cible = isset($cible) ? $cible : $this;
+		return $this->trouver($nom, isset($cible) ? $cible : $this);
 	}
 	
 	public function trouver($nomLien, $créerSiBesoin = true)
@@ -73,7 +90,7 @@ class Classe
 		if(!isset($this->_liens[$nomLien]) && isset($this->_parent) && ($lien = $this->_parent->trouver($nomLien, false)))
 			return $lien;
 		if(!isset($this->_liens[$nomLien]))
-			return $créerSiBesoin ? $this->définir($nomLien) : false;
+			return $créerSiBesoin ? $this->définir($nomLien, null, null, is_object($créerSiBesoin) ? $créerSiBesoin : null) : false;
 		return $this->_liens[$nomLien];
 	}
 	

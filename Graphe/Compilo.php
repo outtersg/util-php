@@ -27,14 +27,22 @@ class Compilo
 {
 	public static $exprLien = '[^ |]+';
 	
-	public function compiler(Classe $conteneur, $définition)
+	public function compiler($conteneur, $définition = null)
 	{
-		if(!is_string($définition))
-			return new LienSimple($conteneur, $définition);
+		if(!isset($définition))
+		{
+			$définition = $conteneur;
+			$conteneur = null;
+		}
 		
 		$bouts = $this->_découper($définition);
 		$this->_empaqueter($bouts);
 		return $this->_assembler($conteneur, $bouts);
+	}
+	
+	public function compilerSimple($nom)
+	{
+		return new LienSimple($nom);
 	}
 	
 	protected function _assembler(Classe $conteneur, $bouts)
@@ -60,14 +68,14 @@ class Compilo
 		
 		if($prioMax <= 0)
 		{
-			$compil = new LienChaîne($conteneur);
+			$compil = new LienChaîne;
 			foreach($bouts as $bout)
 				switch($bout[0])
 				{
 					case self::ESPACE:
 						break;
 					case self::AUTRE:
-						$compil->args[] = $conteneur->trouver($bout[1]);
+						$compil->args[] = new LienSymbolique($bout[1]); // A priori ça terminera en LienSimple… sauf si un lien plus élaboré est au préalable déclaré dans la classe avec ce nom. D'où en tout cas le besoin de ne pas coder en dur trop vite un LienSimple: la décision se fera au moment de la résolution.
 						break;
 					case self::BLOC:
 						$compil->args[] = $this->_assembler($conteneur, $bout[1]);
@@ -85,7 +93,7 @@ class Compilo
 		switch($bouts[$posPrioMax][1])
 		{
 			case '|':
-				$compil = new LienOu($conteneur);
+				$compil = new LienOu;
 				$compil->args[0] = $this->_assembler($conteneur, array_slice($bouts, 0, $posPrioMax));
 				$compil->args[1] = $this->_assembler($conteneur, array_slice($bouts, $posPrioMax + 1));
 				return $compil;
@@ -95,7 +103,7 @@ class Compilo
 				// En début de bloc, l'* porte sur tout le bloc. Sinon sur son prédécesseur.
 				if($posPrioMax == 0)
 				{
-					$compil = new LienRépét($conteneur);
+					$compil = new LienRépét;
 					$compil->args = array($this->_assembler($conteneur, array_slice($bouts, 1)));
 					$compil->min = 0;
 					$compil->max = null;
