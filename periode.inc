@@ -78,10 +78,10 @@ class Dateur0
 		$precedent = false;
 		if($date[$i] >= 0 && $date[$i] !== null)
 		{
-				$hms .= $lAutre ? sprintf("%02.2d", $date[$i]) : ($hms ? ' ' : '').$date[$i];
-			if(!$lAutre)
+				$hms .= $lAutre ? sprintf(" %02.2d", $date[$i]) : ($hms ? ' ' : '').$date[$i];
+				if(!$lAutre) // Nous n'avons aucun membre nous précédant avec son unité, nous sommes donc obligés d'en présenter une nous-même pour que l'internaute comprenne quel champ nous sommes.
 			{
-					$hms .= Periode::$UNITES[$i];
+					$hms .= ' '.Periode::$UNITES[$i];
 				$precedent = true;
 			}
 		}
