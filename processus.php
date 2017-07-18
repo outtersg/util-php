@@ -103,4 +103,43 @@ class ProcessusCauseur extends Processus
 	}
 }
 
+class ProcessusLignes extends Processus
+{
+	public function __construct($argv, $sorteurLignes = null)
+	{
+		$this->_sorteur = $sorteurLignes;
+		parent::__construct($argv);
+	}
+	
+	public function attendre()
+	{
+		foreach(array(1, 2) as $fd)
+			$this->_contenuSorties[$fd] = null;
+		$r = parent::attendre();
+		foreach(array(1, 2) as $fd)
+			if(isset($this->_contenuSorties[$fd]))
+				$this->_sortie($fd, "\n");
+		return $r;
+	}
+	
+	protected function _sortie($fd, $bloc)
+	{
+		if(isset($this->_contenuSorties[$fd]))
+			$bloc = $this->_contenuSorties[$fd].$bloc;
+		$début = 0;
+		while(($fin = strpos($bloc, "\n", $début)) !== false)
+		{
+			$this->_sortirLigne(substr($bloc, $début, $fin - $début), $fd);
+			$début = $fin + 1;
+		}
+		$this->_contenuSorties[$fd] = $début < strlen($bloc) ? substr($bloc, $début) : null;
+	}
+	
+	protected function _sortirLigne($ligne, $fd)
+	{
+		if(isset($this->_sorteur))
+			call_user_func($this->_sorteur, $ligne, $fd);
+	}
+}
+
 ?>
