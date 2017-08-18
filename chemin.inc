@@ -39,13 +39,14 @@ class Chemin
 	public $chemin;
 	/* Si le chemin désigne une fichier, son nom est ajouté ici */
 	public $fichier;
-	/* Chemin auquel celui-ci est relatif. */
+	/**
+	 * @var null|string|Chemin
+	 *    null: chemin relatif sans rattachement
+	 *    Chemin: chemin auquel celui-ci est relatif
+	 *    string: protocole: soit '/', soit 'protocole://///' (tous les slashes
+	 *      livrés avec le nom apparaissent).
+	 */
 	public $depuis;
-	/* Protocole par lequel s'obtient le chemin. Un protocole non nul désigne un
-	 * chemin absolu ou un protocole (il vaut alors '/' dans le premier cas,
-	 * 'protocole://///' dans le second (tous les slashes livrés avec le nom
-	 * y apparaissent)). */
-	public $protocole = null;
 	
 	/*- Construction ---------------------------------------------------------*/
 	
@@ -112,10 +113,9 @@ class Chemin
 		$r = clone $this;
 		if($chemin instanceof Chemin)
 		{
-			if($chemin->protocole === '/' && $r->protocole !== null && $r->protocole !== '/') // Un protocole façon URL passe devant un chemin absolu.
-				$r->chemin = array_slice($r->chemin, 0, 2);
-			else
-			if($chemin->protocole !== null) // Si l'ajout est une adresse absolue, il se fiche de ce qu'on peut lui placer devant (par exemple $this).
+			if($chemin->depuis === '/' && $r->depuis !== null && $r->depuis !== '/') // Un protocole façon URL passe devant un chemin absolu.
+				$r->_enraciner();
+			else if(is_string($chemin->depuis)) // Si l'ajout est une adresse absolue, il se fiche de ce qu'on peut lui placer devant (par exemple $this).
 				return clone $chemin;
 			for($n = count($chemin->chemin), $i = 0; $i < $n; $i += 2)
 				$r->ajouter($chemin->chemin[$i], $chemin->chemin[$i+1]);
@@ -145,24 +145,67 @@ class Chemin
 						$fin = $f;
 						while(($suite = substr($suiteDuCheminADecouper, ++$f, 1)) == '/') // On passe tous les '/': tant qu'on a pas le serveur, ils peuvent faire partie du protocole et il faut donc les conserver, ce que ne fait pas notre traitement de chemin habituel.
 							++$fin;
-						$this->chemin = array(); // Chemin absolu, on réinitialise.
-						$this->protocole = substr($suiteDuCheminADecouper, 0, $fin + 1);
+						$this->_enraciner(substr($suiteDuCheminADecouper, 0, $fin + 1));
 					}
 					else
 						$this->ajouter(1, $contenu);
 				}
 			}
 			else if($debut == 0) // Le premier '/' est spécial, il indique un chemin absolu
-			{
-				if(!$this->surServeur() || !count($this->chemin) || $this->chemin[0] == -1) // Les protos dont le premier élément est déjà un élément de chemin.
-				{
-				$this->protocole = '/';
-				$this->chemin = array();
-				}
-				else // Les protos dont le premier élément est un serveur (donc le chemin ne commence qu'au second).
-					array_splice($this->chemin, 2);
-			}
+				$this->_enraciner('/');
 		$this->fichier = substr($suiteDuCheminADecouper, $debut);
+	}
+	
+	/**
+	 * Réinitialise le chemin à sa racine.
+	 *
+	 * @param string $par Début de chemin qui nous fait enraciner (protocole ou /; ou null pour enraciner sur le protocole actuel).
+	 */
+	protected function _enraciner($par = null)
+	{
+		// On ne peut plus être depuis notre _depuis que si celui-ci est déjà à sa racine.
+		
+		if(($par === '/' || !$par) && $this->surServeur())
+		{
+			// Cas pourri: si nous ne sommes pas le point de départ, nous devons aller vérifier que ce dernier est déjà à sa racine; sinon il nous faudra devenir nous-mêmes racine.
+			$depuis = $this->ancêtreRacine(true);
+			if(!is_integer($depuis) && $depuis !== $this) // Si c'est un entier, pas de bol: on n'a pas assez d'éléments pour trouver la racine. Tant pis.
+				$this->depuis = $depuis;
+		}
+		else
+		{
+			$this->chemin = array();
+			if($par)
+				$this->depuis = $par;
+		}
+	}
+	
+	/**
+	 * Trouve le premier ancêtre qui soit racine ou le crée si besoin.
+	 * Ancêtre racine = a 0 ou 1 élément de chemin (0 pour les protos sans serveur, 1 pour ceux avec serveur).
+	 */
+	public function ancêtreRacine($meTronquerSiBesoin = false)
+	{
+		if(is_object($this->depuis))
+			$r = $this->depuis->ancêtreRacine();
+		else if(!$this->depuis) // Aïe, on est un chemin purement absolu; on ne pourra jamais renvoyer d'ancêtre racine…
+			$r = '/';
+		else // Nous sommes le point de départ!
+			$r = $this->surServeur() ? 2 : 0; // * 2 car nous avons à chaque fois un sens et l'élément de chemin.
+		// Interprétation du résultat intermédiaire.
+		if(is_integer($r)) // Il nous faut un certain nombre d'éléments de chemin.
+		{
+			if(($r -= count($this->chemin)) == 0) // Pile ce qu'il manquait! Nous constituons une racine.
+				$r = $this;
+			else if($r < 0) // Bon, trop d'éléments. Qu'est-on autorisé à faire?
+			{
+				$rbis = $meTronquerSiBesoin ? $this : clone $this;
+				array_splice($rbis->chemin, $r);
+				$r = $rbis;
+			}
+			// Else il en manque encore; on transmet $r tel quel, à notre appelant de compléter.
+		}
+		return $r;
 	}
 	
 	function ajouter($sens, $nom)
@@ -209,8 +252,7 @@ class Chemin
 		{
 			if(($n -= 2) < $remonteeMax) // On a épuisé le chemin.
 			{
-				if($this->protocole === null)
-					if($this->depuis) // Mais il reste peut-être encore notre $this->depuis.
+				if(is_object($this->depuis)) // Mais il reste peut-être encore notre $this->depuis.
 						return $this->depuis->positiver($sens);
 					else
 						return null;
@@ -225,8 +267,8 @@ class Chemin
 	
 	function cheminDossierJusquA($n, $url = false)
 	{
-		if($this->protocole !== null)  // Un protocole au début.
-			$r = $this->protocole;
+		if(is_string($this->depuis))  // Un protocole au début.
+			$r = $this->depuis;
 		else
 			$r = '';
 		
@@ -260,9 +302,9 @@ class Chemin
 		
 		$autre = $autre->absolu();
 		$moi = $this->absolu();
-		if($moi->protocole)
+		if(is_string($moi->depuis))
 		{
-			if($autre->protocole && $autre->protocole != $moi->protocole)
+			if($autre->depuis && $autre->depuis != $moi->depuis)
 				return $moi; // On reste en absolu.
 		}
 		
@@ -305,12 +347,14 @@ class Chemin
 	 * dans $this->depuis. */
 	function absolu()
 	{
-		return ($this->protocole && $this->protocole != '/') || !$this->depuis ? $this : $this->depuis->absolu()->et($this);
+		return is_object($this->depuis) ? $this->depuis->absolu()->et($this) : $this;
 	}
 	
 	function surServeur()
 	{
-		return $this->protocole && !in_array($this->protocole, $GLOBALS['CheminProtosSansServeur']);
+		if(is_object($this->depuis))
+			return $this->depuis->surServeur();
+		return is_string($this->depuis) && !in_array($this->depuis, $GLOBALS['CheminProtosSansServeur']);
 	}
 	
 	/*- Manipulations --------------------------------------------------------*/
