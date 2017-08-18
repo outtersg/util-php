@@ -26,6 +26,11 @@
 
 class Chemin
 {
+	/*- Références -----------------------------------------------------------*/
+	
+	public static $UrlPubliqueRacine = null;
+	public static $UrlPubliqueDépart = null;
+	
 	/*- Contenu --------------------------------------------------------------*/
 	
 	/* Suite de sens (-1 ou 1) et d'éléments de chemins depuis le dossier de
@@ -55,6 +60,51 @@ class Chemin
 		
 		if($acces)
 			$this->decouper($acces);
+	}
+	
+	/**
+	 * Crée un chemin pour l'URL racine d'un tableau de type _SERVER (à partir de REQUEST_URI, les X-Forwarded-, etc.).
+	 */
+	public static function DepuisServeur($envServeur)
+	{
+		$proto = 'http';
+		$hôte = isset($envServeur['HTTP_X_FORWARDED_HOST']) ? $envServeur['HTTP_X_FORWARDED_HOST'] : $envServeur['SERVER_NAME'];
+		$complémentPort = isset($envServeur['HTTP_X_FORWARDED_PORT']) ? ':'.$envServeur['HTTP_X_FORWARDED_PORT'] : '';
+		if(!$complémentPort)
+		{
+			$port = $envServeur['SERVER_PORT'];
+			$portDéfaut = $proto == 'http' ? 80 : ($proto == 'https' ? 443 : null);
+			if($port != $portDéfaut)
+				$complémentPort = ':'.$port;
+		}
+		$racine = '/';
+		$préfixePublic = '';
+		if(isset($envServeur['HTTP_X_FORWARDED_URI']))
+		{
+			$uris = array
+			(
+				'u' => $envServeur['HTTP_X_FORWARDED_URI'], // pUblique.
+				'r' => $envServeur['REQUEST_URI'], // pRivée.
+			);
+			foreach($uris as & $ptrUri)
+				$ptrUri = preg_replace('#/(?:([^/]*\.php)(?:|/.*)|[^/]*)$#', '/\1', $ptrUri);
+			$pos = 0;
+			while(($pos = strpos($uris['u'], '/', $pos)) !== false)
+			{
+				if(substr($uris['u'], $pos) == $uris['r'])
+				{
+					$préfixePublic = substr($uris['u'], 0, $pos);
+					break;
+				}
+				++$pos;
+			}
+		}
+		$urlPubliqueRacine = $proto.'://'.$hôte.$complémentPort.$préfixePublic.'/';
+		$urlPubliqueRacine = new Chemin($urlPubliqueRacine);
+		
+		$urlPubliqueDépart = $urlPubliqueRacine->et($uris['u'])->cheminDepuis($urlPubliqueRacine);
+		
+		return $urlPubliqueDépart;
 	}
 	
 	function et($chemin)
@@ -307,6 +357,12 @@ function detruireChemin($chemin)
 $GLOBALS['CheminProtosSansServeur'] = array('/', 'file:');
 
 $GLOBALS['cheminDepart'] = null; // Juste histoire qu'il soit défini pour servir de départ à $cheminDepart.
-$GLOBALS['cheminDepart'] = $cheminDepart = new Chemin($_SERVER['SCRIPT_NAME']);
+$GLOBALS['cheminDepart'] = $cheminDepart = new Chemin($_SERVER['SCRIPT_FILENAME']);
+
+if(isset($_SERVER['REQUEST_URI']))
+{
+	Chemin::$UrlPubliqueDépart = Chemin::DepuisServeur($_SERVER);
+	Chemin::$UrlPubliqueRacine = Chemin::$UrlPubliqueDépart->depuis;
+}
 
 ?>
