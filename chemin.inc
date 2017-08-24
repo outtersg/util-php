@@ -31,6 +31,12 @@ class Chemin
 	public static $UrlPubliqueRacine = null;
 	public static $UrlPubliqueDépart = null;
 	
+	/**
+	 * Définit le mode "propre" sur tous les appels à venir à et().
+	 * En mode pas propre, et() agrège le maximum de choses dans un clone de $this. En mode propre, $this sert de depuis au nouvel élément, qui ne possède alors plus que son supplément de chemin par rapport à $this.
+	 */
+	public static $EtPropre = false;
+	
 	/*- Contenu --------------------------------------------------------------*/
 	
 	/* Suite de sens (-1 ou 1) et d'éléments de chemins depuis le dossier de
@@ -108,8 +114,21 @@ class Chemin
 		return $urlPubliqueDépart;
 	}
 	
-	function et($chemin)
+	/**
+	 * Tire un nouveau chemin de $this ($this devient son depuis).
+	 */
+	public function dou($chemin)
 	{
+		return $this->et($chemin, true);
+	}
+	
+	function et($chemin, $propre = null)
+	{
+		if(!isset($propre))
+			$propre = Chemin::$EtPropre;
+		if($propre)
+			$r = new Chemin($chemin instanceof Chemin ? null : $chemin, $this);
+		else
 		$r = clone $this;
 		if($chemin instanceof Chemin)
 		{
@@ -122,6 +141,7 @@ class Chemin
 			$r->fichier = $chemin->fichier;
 		}
 		else
+			if(!$propre)
 			$r->decouper($chemin);
 		
 		return $r;
@@ -397,6 +417,9 @@ function detruireChemin($chemin)
 		rmdir($chemin);
 	}
 }
+
+if(isset($GLOBALS['CHEMIN_ET_PROPRE']))
+	Chemin::$EtPropre = $GLOBALS['CHEMIN_ET_PROPRE'];
 
 $GLOBALS['CheminProtosSansServeur'] = array('/', 'file:');
 
