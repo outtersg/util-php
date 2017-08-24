@@ -114,7 +114,7 @@ class Chemin
 		$urlPubliqueRacine = $proto.'://'.$hôte.$complémentPort.$préfixePublic.'/';
 		$urlPubliqueRacine = new Chemin($urlPubliqueRacine);
 		
-		$urlPubliqueDépart = $urlPubliqueRacine->et($uris['u'])->cheminDepuis($urlPubliqueRacine);
+		$urlPubliqueDépart = $urlPubliqueRacine->dou(substr($uriDepuisRacine, 1));
 		
 		return $urlPubliqueDépart;
 	}
