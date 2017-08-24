@@ -86,15 +86,20 @@ class Chemin
 		}
 		$racine = '/';
 		$préfixePublic = '';
+		$uriDepuisRacine = $envServeur['REQUEST_URI'];
+		$uriDepuisRacine = preg_replace('@[?#].*@', '', $uriDepuisRacine);
 		if(isset($envServeur['HTTP_X_FORWARDED_URI']))
 		{
 			$uris = array
 			(
 				'u' => $envServeur['HTTP_X_FORWARDED_URI'], // pUblique.
-				'r' => $envServeur['REQUEST_URI'], // pRivée.
+				'r' => $uriDepuisRacine, // pRivée.
 			);
 			foreach($uris as & $ptrUri)
+			{
+				$ptrUri = preg_replace('@[?#].*@', '', $ptrUri);
 				$ptrUri = preg_replace('#/(?:([^/]*\.php)(?:|/.*)|[^/]*)$#', '/\1', $ptrUri);
+			}
 			$pos = 0;
 			while(($pos = strpos($uris['u'], '/', $pos)) !== false)
 			{
