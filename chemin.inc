@@ -131,25 +131,37 @@ class Chemin
 	{
 		if(!isset($propre))
 			$propre = Chemin::$EtPropre;
-		if($propre)
-			$r = new Chemin($chemin instanceof Chemin ? null : $chemin, $this);
+		
+		if(!$propre)
+			$r = clone $this;
 		else
-		$r = clone $this;
+		{
+			if(!($chemin instanceof Chemin))
+				return new Chemin($chemin, $this);
+			$r = new Chemin(null, $this);
+		}
+		return $r->aller($chemin);
+	}
+	
+	/**
+	 * Modifie $this en lui faisant parcourir un bout de chemin.
+	 */
+	public function aller($chemin)
+	{
 		if($chemin instanceof Chemin)
 		{
-			if($chemin->depuis === '/' && $r->depuis !== null && $r->depuis !== '/') // Un protocole façon URL passe devant un chemin absolu.
-				$r->_enraciner();
-			else if(is_string($chemin->depuis)) // Si l'ajout est une adresse absolue, il se fiche de ce qu'on peut lui placer devant (par exemple $this).
+			if($chemin->depuis === '/' && $this->depuis !== null && $this->depuis !== '/') // Un protocole façon URL passe devant un chemin absolu.
+				$this->_enraciner();
+			else if(is_string($chemin->depuis)) // Si l'ajout est une adresse absolue, il se fiche de ce qu'on peut lui placer devant.
 				return clone $chemin;
 			for($n = count($chemin->chemin), $i = 0; $i < $n; $i += 2)
-				$r->ajouter($chemin->chemin[$i], $chemin->chemin[$i+1]);
-			$r->fichier = $chemin->fichier;
+				$this->ajouter($chemin->chemin[$i], $chemin->chemin[$i+1]);
+			$this->fichier = $chemin->fichier;
 		}
 		else
-			if(!$propre)
-			$r->decouper($chemin);
+			$this->decouper($chemin);
 		
-		return $r;
+		return $this;
 	}
 	
 	/*- Interne --------------------------------------------------------------*/
