@@ -102,7 +102,7 @@ class GlobExpr
 		foreach($globs as $glob)
 			if(($glob2 = strtr($glob, array($étoile => '[31m*[0m', $point => '[31m.[0m', $interr => '[31m?[0m'))) != $glob)
 				throw new Exception('Impossible de convertir en glob: '.$glob2);
-		return $globs;
+		return array_keys($globs);
 	}
 }
 
