@@ -1,0 +1,8 @@
+{
+	"name": "gui/util",
+	"description": "Les utilitaires de Guillaume",
+	"require":
+	{
+		"php": ">= 5.2.0"
+	}
+}
