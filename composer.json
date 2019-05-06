@@ -1,6 +1,7 @@
 {
 	"name": "gui/util",
 	"description": "Les utilitaires de Guillaume",
+	"version": "1.0.x-dev",
 	"require":
 	{
 		"php": ">= 5.2.0"
