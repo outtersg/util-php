@@ -74,8 +74,7 @@ class Processus
 		fclose($this->_tubes[2]);
 		$retour = proc_close($this->_fils);
 		
-		if($retour != 0)
-			fprintf(STDERR, '# Le processus fils est sorti en erreur '.$retour."\n");
+		return $retour;
 	}
 	
 	protected function _sortie($fd, $bloc)
