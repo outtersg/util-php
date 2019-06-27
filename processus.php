@@ -112,14 +112,17 @@ class Processus
 				return false;
 			if(!isset($this->_résiduSource))
 				$this->_résiduSource = fread($this->_source, 0x100000);
-			if(!strlen($this->_résiduSource))
+			if
+			(
+				!strlen($this->_résiduSource)
+				|| !($nÉcrits = fwrite($stdinProcessus, $this->_résiduSource)) // Si on n'a rien pu écrire (alors que nous avons été invoqués suite à un stream_select nous informant qu'on pouvait écrire), c'est que l'autre côté a été fermé. Du moins c'est le comportement observé sur un psql tombant sur une instruction SQL invalide.
+			)
 			{
 				unset($this->_résiduSource);
 				fclose($this->_source);
 				$this->_source = false;
 				return false;
 			}
-			$nÉcrits = fwrite($stdinProcessus, $this->_résiduSource);
 			if($nÉcrits == strlen($this->_résiduSource))
 				unset($this->_résiduSource);
 			else
