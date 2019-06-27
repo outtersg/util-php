@@ -46,18 +46,29 @@ class Processus
 		$this->_fils = proc_open(implode(' ', $argv), $desc, $this->_tubes);
 	}
 	
-	public function attendre()
+	public function attendre($stdin = null)
 	{
+		if(!$stdin)
+		{
 		fclose($this->_tubes[0]);
 		
 		$entrees = array();
+		}
+		else
+		{
+			$entrees = array(0 => $this->_tubes[0]);
+			$this->_initialiserÉcritures($stdin);
+		}
+
 		$sorties = array(1 => $this->_tubes[1], 2 => $this->_tubes[2]);
 		$erreurs = array();
 		
-		while(count($sorties))
+		while(count($sorties) + count($entrees))
 		{
 			$sortiesModif = $sorties; // Copie de tableau.
-			if($nFlux = stream_select($sortiesModif, $entrees, $erreurs, 1))
+			$entréesModifiée = $entrees;
+			if($nFlux = stream_select($sortiesModif, $entréesModifiée, $erreurs, 1))
+			{
 				foreach($sortiesModif as $flux)
 				{
 					foreach($sorties as $fd => $fluxSurveillé)
@@ -68,6 +79,13 @@ class Processus
 					if(strlen($bloc) == 0) // Fin de fichier, on arrête de le surveiller.
 						unset($sorties[$fd]);
 				}
+				if(count($entréesModifiée))
+					if($this->_écrire($stdin, $this->_tubes[0]) === false)
+					{
+						unset($entrees[0]); // Il n'y en a qu'une.
+						fclose($this->_tubes[0]);
+					}
+			}
 		}
 		
 		fclose($this->_tubes[1]);
@@ -75,6 +93,38 @@ class Processus
 		$retour = proc_close($this->_fils);
 		
 		return $retour;
+	}
+	
+	protected function _initialiserÉcritures($source)
+	{
+		stream_set_blocking($this->_tubes[0], false);
+		/* À FAIRE: $source Resource; $source fonction. */
+		if(is_string($source) && is_file($source))
+			$this->_source = fopen($source, 'rb');
+	}
+	
+	protected function _écrire($source, $stdinProcessus)
+	{
+		/* À FAIRE: $source Resource; $source fonction. */
+		if(is_string($source) && isset($this->_source))
+		{
+			if($this->_source === false) // Plus rien à entrer.
+				return false;
+			if(!isset($this->_résiduSource))
+				$this->_résiduSource = fread($this->_source, 0x100000);
+			if(!strlen($this->_résiduSource))
+			{
+				unset($this->_résiduSource);
+				fclose($this->_source);
+				$this->_source = false;
+				return false;
+			}
+			$nÉcrits = fwrite($stdinProcessus, $this->_résiduSource);
+			if($nÉcrits == strlen($this->_résiduSource))
+				unset($this->_résiduSource);
+			else
+				$this->_résiduSource = substr($this->_résiduSource, $nÉcrits);
+		}
 	}
 	
 	protected function _sortie($fd, $bloc)
@@ -110,11 +160,11 @@ class ProcessusLignes extends Processus
 		parent::__construct($argv);
 	}
 	
-	public function attendre()
+	public function attendre($stdin = null)
 	{
 		foreach(array(1, 2) as $fd)
 			$this->_contenuSorties[$fd] = null;
-		$r = parent::attendre();
+		$r = parent::attendre($stdin);
 		foreach(array(1, 2) as $fd)
 			if(isset($this->_contenuSorties[$fd]))
 				$this->_sortie($fd, "\n");
