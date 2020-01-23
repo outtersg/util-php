@@ -320,7 +320,13 @@ try
 catch(Exception $e)
 {
 	fprintf(STDERR, "\033[31m# ".$e->getMessage()."\033[0m\n");
+	fprintf(STDERR, print_r(array_map('affTrace', array_slice($e->getTrace(), 0, 8)), true));
 	exit(1);
+}
+
+function affTrace($x)
+{
+	return @$x['file'].':'.@$x['line'].': '.$x['function'];
 }
 
 ?>
