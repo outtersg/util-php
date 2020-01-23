@@ -151,7 +151,7 @@ class CompoFeuille extends CompoSimple
 			case 'c':
 				if(is_array($depuis))
 				{
-					if(isset($attributs['t']) && $attributs['t'] != 's')
+					if(isset($attributs['t']) && !in_array($attributs['t'], array('s', 'str', 'n')))
 					{
 						fprintf(STDERR, '# Je ne sais pas traiter le type de case \''.$attributs['t']."'\n");
 						break;
@@ -164,7 +164,7 @@ class CompoFeuille extends CompoSimple
 					}
 					$numCol = $this->colEnNum($rés[1]);
 					if(isset($attributs['t']))
-						$depuis['t'][$numCol] = 's';
+						$depuis['t'][$numCol] = $attributs['t'];
 					if(isset($attributs['s']))
 						$depuis['s'][$numCol] = 0 + $attributs['s'];
 					$depuis['d'][$numCol] = '';
