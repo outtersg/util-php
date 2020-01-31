@@ -26,7 +26,7 @@ require_once "sortiexml.php";
 
 class XmlFiltre extends Compo
 {
-	function XmlFiltre($sortie)
+	public function __construct($sortie)
 	{
 		$this->sortie = new SortieXml();
 		$this->sortie->commencer($sortie);
