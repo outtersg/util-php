@@ -268,27 +268,15 @@ class Traiteur
 {
 	public function traiter($chemin)
 	{
-		$d = new Décompresseur($chemin);
-		
-		$compoStyles = new CompoStyles();
-		$compoChaînes = new CompoChaînes();
-		
-		$c = new Chargeur();
-		
-		$c->charger('-', 'styleSheet', $compoStyles, false, $f = $d->styles());
-		fclose($f);
-		
-		$c->charger('-', 'sst', $compoChaînes, false, $f = $d->chaînes());
-		fclose($f);
+		require_once dirname(__FILE__).'/ChargeurXlsx.php';
+		$c = new ChargeurXlsx();
+		$c->lire($chemin);
 		
 		$panier = new Panier();
-		$poule = new Poule($panier, $compoStyles->formats, $compoChaînes->chaînes);
+		$poule = new Poule($panier, $c->formats, $c->chaînes);
 		
-		for($numFeuille = 0; $f = $d->feuille(++$numFeuille);)
+		for($numFeuille = 0; $compoFeuille = $c->feuille(++$numFeuille);)
 		{
-			$compoFeuille = new CompoFeuille();
-			$c->charger('-', 'worksheet', $compoFeuille, false, $f);
-			fclose($f);
 			$cheminSortie = strtr($chemin, array('xlsx' => $numFeuille == 1 ? 'csv' : $numFeuille.'.csv'));
 			if($cheminSortie == $chemin)
 				throw new Exceprtion("# Oups, je m'apprêtais à écraser $chemin.");
