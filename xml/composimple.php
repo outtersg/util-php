@@ -27,7 +27,7 @@ class CompoSimple extends Compo
 {
 	public $correspondances;
 	
-	function CompoSimple($correspondances)
+	public function __construct($correspondances)
 	{
 		$this->correspondances = $correspondances;
 	}
