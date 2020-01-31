@@ -211,7 +211,7 @@ class GobeurRacine extends Compo
 	public $nomRacine;
 	public $racineCompo;
 	
-	function GobeurRacine($aBouffer, &$destination)
+	public function __construct($aBouffer, &$destination)
 	{
 		$this->nomRacine = $aBouffer;
 		$this->racineCompo = &$destination;
