@@ -21,9 +21,9 @@
  * SOFTWARE.
  */
 
-require_once dirname(__FILE__).'/xml/chargeur.php';
-require_once dirname(__FILE__).'/xml/compo.php';
-require_once dirname(__FILE__).'/xml/composimple.php';
+require_once dirname(__FILE__).'/../xml/chargeur.php';
+require_once dirname(__FILE__).'/../xml/compo.php';
+require_once dirname(__FILE__).'/../xml/composimple.php';
 
 /*- Commençons par décompresser ----------------------------------------------*/
 
