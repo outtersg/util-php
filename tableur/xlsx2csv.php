@@ -326,7 +326,7 @@ catch(Exception $e)
 
 function affTrace($x)
 {
-	return @$x['file'].':'.@$x['line'].': '.$x['function'];
+	return (isset($x['file']) && isset($x['line']) ? $x['file'].':'.$x['line'].': ' : '').$x['function'];
 }
 
 ?>
