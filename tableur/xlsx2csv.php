@@ -268,9 +268,7 @@ class Traiteur
 {
 	public function traiter($chemin)
 	{
-		require_once dirname(__FILE__).'/ChargeurXlsx.php';
-		$c = new ChargeurXlsx();
-		$c->lire($chemin);
+		$c = $this->_rhino($chemin);
 		
 		$panier = new Panier();
 		$poule = new Poule($panier, $c->formats, $c->chaînes);
@@ -284,6 +282,21 @@ class Traiteur
 			$poule->pondre($compoFeuille->colonnes, $compoFeuille->lignes);
 			$panier->fermer();
 		}
+	}
+	
+	/**
+	 * Le rhino charge.
+	 */
+	protected function _rhino($chemin)
+	{
+		/* À FAIRE: pour certains suffixes, une liste de chargeurs, qu'on essaiera les uns après les autres (par exemple avec une fonction peut()). Le premier à répondre emporte le pactole (et si ça lui a coûté de calculer peut(), libre à lui de mémoriser son prétravail quelque part chez lui où le lire() n'aura plus grand-chose à faire). */
+		$classe = 'ChargeurXlsx';
+		
+		require_once dirname(__FILE__).'/'.$classe.'.php';
+		$c = new $classe();
+		$c->lire($chemin);
+		
+		return $c;
 	}
 }
 
