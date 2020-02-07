@@ -152,6 +152,9 @@ class Traiteur
 		/* À FAIRE: pour certains suffixes, une liste de chargeurs, qu'on essaiera les uns après les autres (par exemple avec une fonction peut()). Le premier à répondre emporte le pactole (et si ça lui a coûté de calculer peut(), libre à lui de mémoriser son prétravail quelque part chez lui où le lire() n'aura plus grand-chose à faire). */
 		$classe = 'ChargeurXlsx';
 		
+		if(substr($chemin, -4) == '.ods')
+			$classe = 'RhinoOds';
+		
 		require_once dirname(__FILE__).'/'.$classe.'.php';
 		$c = new $classe();
 		$c->lire($chemin);
