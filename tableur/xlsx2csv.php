@@ -137,7 +137,7 @@ class Traiteur
 		{
 			$cheminSortie = strtr($chemin, array('xlsx' => $numFeuille == 1 ? 'csv' : $numFeuille.'.csv'));
 			if($cheminSortie == $chemin)
-				throw new Exceprtion("# Oups, je m'apprêtais à écraser $chemin.");
+				throw new Exception("# Oups, je m'apprêtais à écraser $chemin.");
 			$panier->ouvrir($cheminSortie);
 			$poule->pondre($compoFeuille->colonnes, $compoFeuille->lignes);
 			$panier->fermer();
