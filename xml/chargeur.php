@@ -221,6 +221,8 @@ class GobeurRacine extends Compo
 	{
 		if($nom == $this->nomRacine)
 			return $this->racineCompo;
+		$r = null;
+		return $r;
 	}
 }
 
