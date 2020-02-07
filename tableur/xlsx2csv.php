@@ -135,7 +135,7 @@ class Traiteur
 		
 		for($numFeuille = 0; $compoFeuille = $c->feuille(++$numFeuille);)
 		{
-			$cheminSortie = strtr($chemin, array('xlsx' => $numFeuille == 1 ? 'csv' : $numFeuille.'.csv'));
+			$cheminSortie = preg_replace('/[.][^.]*$/', $numFeuille == 1 ? '.csv' : '.'.$numFeuille.'.csv', $chemin);
 			if($cheminSortie == $chemin)
 				throw new Exception("# Oups, je m'apprêtais à écraser $chemin.");
 			$panier->ouvrir($cheminSortie);
