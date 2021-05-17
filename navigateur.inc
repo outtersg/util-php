@@ -31,6 +31,9 @@ if (!function_exists('iconv') && function_exists('libiconv')) { function iconv($
 
 class Navigateur
 {
+	const NOTICE = 0x10;
+	const INFO = 0x08;
+	
 	function effacerCookies() { $this->cookies = array(); $this->cookiesTasses = null; }
 	function __construct() { $this->derniere = null; $this->effacerCookies(); $this->données = array(); }
 	
@@ -64,6 +67,15 @@ class Navigateur
 			if(preg_match('#^http://[^/]*$#', $url))
 				$url = $url.'/';
 			return $url;
+	}
+	
+	protected function _diag($niveau, $message)
+	{
+		$couls = array
+		(
+			Navigateur::NOTICE => 36,
+		);
+		fprintf(STDERR, "[%dm%s[0m%s", isset($couls[$niveau]) ? $couls[$niveau] : 0, $message, substr($message, -1) == "\n" ? '' : "\n");
 	}
 	
 	/* Récupère une URL.
