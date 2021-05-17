@@ -41,7 +41,7 @@ class Navigateur
 		if($n < 0) { $this->cookiesTasses = null; return; }
 		$this->cookiesTasses = array();
 		foreach($this->cookies as $clé => $val)
-			$this->cookiesTasses[] = $clé.'="'.$val.'"';
+			$this->cookiesTasses[] = $clé.'='.$val;
 		$this->cookiesTasses = implode('; ', $this->cookiesTasses);
 	}
 	
@@ -146,7 +146,7 @@ class Navigateur
 		if($this->continuer && (strpos($enTete, 'Set-Cookie: ') === 0))
 		{
 			$ligne = trim(substr($enTete, 0xc));
-			preg_match_all('# *([^=]*)=(([^"][^;]*)|"([^"]*)");#', $ligne.';', $rés);
+			preg_match_all('# *([^=]*)=(([^"][^;]*)|("[^"]*"));#', $ligne.';', $rés);
 			$nom = $rés[1][0];
 			$val = $rés[4][0] !== '' ? $rés[4][0] : $rés[3][0];
 			for($i = count($rés[1]); --$i >= 1;)
