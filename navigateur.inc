@@ -32,7 +32,7 @@ if (!function_exists('iconv') && function_exists('libiconv')) { function iconv($
 class Navigateur
 {
 	function effacerCookies() { $this->cookies = array(); $this->cookiesTasses = null; }
-	function Navigateur() { $this->derniere = null; $this->effacerCookies(); $this->données = array(); }
+	function __construct() { $this->derniere = null; $this->effacerCookies(); $this->données = array(); }
 	
 	function tasserCookies()
 	{
