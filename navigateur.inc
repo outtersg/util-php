@@ -113,9 +113,12 @@ class Navigateur
 				/* PHP est bourrin, il poste en multipart si $champs est un tableau.
 				 * Ça ne nous plaît pas du tout, enfin nous si, mais pas Monster
 				 * pour l'authentification. */
+				$this->_diag(Navigateur::NOTICE, 'POST '.substr($url, 0, 1024)."\n".print_r($champs, true));
 				$champs = is_string($champs) ? $champs : substr(params_decomposer(null, $champs), 1);
 				curl_setopt($c, CURLOPT_POSTFIELDS, $champs);
 			}
+			else
+				$this->_diag(Navigateur::NOTICE, 'GET '.substr($url, 0, 1024));
 			$GLOBALS['navigateur_recuperateurEnTetes'] = &$this;
 			curl_setopt($c, CURLOPT_HEADERFUNCTION, 'navigateur_recupEnTete');
 			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
