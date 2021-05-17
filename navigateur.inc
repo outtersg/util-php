@@ -103,6 +103,7 @@ class Navigateur
 			$url = $this->url($url);
 			curl_setopt($c, CURLOPT_URL, $url);
 			curl_setopt($c, CURLOPT_COOKIE, $this->cookiesTasses);
+			$this->_diag(0, $this->cookiesTasses);
 			if($champs !== null)
 			{
 				/* Ça on vire, c'est déjà fait par params_decomposer (à part la conversion en latin1. Peut-être un paramètre à rajouter?).
