@@ -133,6 +133,7 @@ class Navigateur
 			if($this->continuer)
 				$this->derniere = $url;
 			$r = curl_exec($c);
+			$this->retour = curl_getinfo($c, CURLINFO_RESPONSE_CODE);
 			curl_close($c);
 			$this->tasserCookies();
 			
