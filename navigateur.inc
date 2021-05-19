@@ -151,7 +151,7 @@ class Navigateur
 	
 	function allerEtTrouver($url, $champs, $commentÇaSAppelle, $trouver)
 	{
-		$page = $this->aller($url, $champs);
+		$page = $this->page = $this->aller($url, $champs);
 		$r = preg_match($trouver, $page, $réponses, 0);
 		if(!$r) { echo '# Impossible de récupérer '.$commentÇaSAppelle.'.'."\n"; return false; }
 		return $réponses[1];
