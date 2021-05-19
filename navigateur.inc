@@ -177,6 +177,7 @@ class Navigateur
 				}
 			$this->cookies[$nom] = $val;
 		}
+		// À FAIRE: la raison d'être de cette fonction ne serait-elle pas CURLINFO_EFFECTIVE_URL?
 		else if(strpos($enTete, 'Location: ') === 0 || strpos($enTete, 'location: ') === 0) // Sale con d'IIS de photoservice.com!
 			$this->suivre = strtr(substr($enTete, 0xa), array("\n" => '', "\r" => '')); // Un caractère retour à la fin.
 	}
