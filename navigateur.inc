@@ -130,7 +130,12 @@ class Navigateur
 				curl_setopt($c, CURLOPT_USERPWD, $this->auth); // id:mdp
 			}
 			if(isset($enTetesHttp))
-				curl_setopt($c, CURLOPT_HTTPHEADER, $enTetesHttp);
+			{
+				$ent = array();
+				foreach($enTetesHttp as $clé => $valeur)
+					$ent[] = is_int($clé) ? $valeur : $clé.': '.$valeur;
+				curl_setopt($c, CURLOPT_HTTPHEADER, $ent);
+			}
 			if($this->continuer)
 				$this->derniere = $url;
 			$r = curl_exec($c);
