@@ -54,7 +54,7 @@ class Navigateur
 	{
 		if($url === null)
 			return $this->derniere;
-			if($url{0} == '/') // URL absolue sur le même site.
+			if(substr($url, 0, 1) == '/') // URL absolue sur le même site.
 			{
 				$pos = strpos($this->derniere, '/', strpos($this->derniere, '://') + 3);
 				return ($pos === false ? $this->derniere : substr($this->derniere, 0, $pos)).$url;
