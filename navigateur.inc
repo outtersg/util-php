@@ -103,6 +103,7 @@ class Navigateur
 			$url = $this->url($url);
 			curl_setopt($c, CURLOPT_URL, $url);
 			curl_setopt($c, CURLOPT_COOKIE, $this->cookiesTasses);
+			if($this->cookiesTasses)
 			$this->_diag(0, $this->cookiesTasses);
 			if($champs !== null)
 			{
