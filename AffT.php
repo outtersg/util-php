@@ -58,17 +58,17 @@ class AffT
 		{
 			// On va à la dernière ligne "existante".
 			if($this->y < $this->nl - 1)
-				echo '['.($this->nl - 1 - $this->y)."B";
+				$this->_sortir('['.($this->nl - 1 - $this->y).'B');
 			// Et sur sa dernière colonne.
-			echo '['.$this->_ncaff.'G';
-			echo str_repeat("\n", $numL + 1 - $this->nl);
+			$this->_sortir('['.$this->_ncaff.'G');
+			$this->_sortir(str_repeat("\n", $numL + 1 - $this->nl));
 			$this->y = $numL;
 			$this->nl = $numL + 1;
 		}
 		
-		echo "\r";
+		$this->_sortir("\r");
 		if(($dépl = $numL - $this->y))
-			echo '['.($dépl < 0 ? -$dépl.'A' : $dépl.'B');
+			$this->_sortir('['.($dépl < 0 ? -$dépl.'A' : $dépl.'B'));
 		
 		/* Protection */
 		
@@ -85,7 +85,7 @@ class AffT
 		$aff = $this->chaîneBornée($texte, $tailleDispo);
 		if($fin) $aff .= $fin;
 		
-		echo $aff;
+		$this->_sortir($aff);
 		
 		$this->y = $numL;
 		
@@ -157,6 +157,11 @@ class AffT
 		if(strlen($fin = substr($chaîne, $pos)))
 			$r[] = $fin;
 		return $r;
+	}
+	
+	protected function _sortir($chaîne)
+	{
+		echo $chaîne;
 	}
 }
 
