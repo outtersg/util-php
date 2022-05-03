@@ -50,24 +50,24 @@ class AffT
 		/* Déplacement */
 		
 		if($numL === null)
-			$numL = isset($this->_y) ? $this->nl : 0;
-		isset($this->_y) || $this->_y = 0;
+			$numL = isset($this->y) ? $this->nl : 0;
+		isset($this->y) || $this->y = 0;
 		
 		// Faut-il rajouter des lignes?
 		if($numL >= $this->nl)
 		{
 			// On va à la dernière ligne "existante".
-			if($this->_y < $this->nl - 1)
-				echo '['.($this->nl - 1 - $this->_y)."B";
+			if($this->y < $this->nl - 1)
+				echo '['.($this->nl - 1 - $this->y)."B";
 			// Et sur sa dernière colonne.
 			echo '['.$this->_ncaff.'G';
 			echo str_repeat("\n", $numL + 1 - $this->nl);
-			$this->_y = $numL;
+			$this->y = $numL;
 			$this->nl = $numL + 1;
 		}
 		
 		echo "\r";
-		if(($dépl = $numL - $this->_y))
+		if(($dépl = $numL - $this->y))
 			echo '['.($dépl < 0 ? -$dépl.'A' : $dépl.'B');
 		
 		/* Protection */
@@ -87,7 +87,7 @@ class AffT
 		
 		echo $aff;
 		
-		$this->_y = $numL;
+		$this->y = $numL;
 		
 		/* Casseroles */
 		
