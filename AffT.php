@@ -27,8 +27,9 @@
  */
 class AffT
 {
-	public function __construct()
+	public function __construct($sortie = null)
 	{
+		$this->_sortie = $sortie;
 		$this->màjDims();
 		// On suppose le curseur être sur une ligne "à nous".
 		$this->nl = 1;
@@ -161,6 +162,9 @@ class AffT
 	
 	protected function _sortir($chaîne)
 	{
+		if(isset($this->_sortie))
+			fprintf($this->_sortie, '%s', $chaîne);
+		else
 		echo $chaîne;
 	}
 }
