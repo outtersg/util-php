@@ -67,6 +67,10 @@ class AffT
 			$this->nl = $numL + 1;
 		}
 		
+		// Inutile de tenter d'écrire sur une ligne hors écran, le terminal refusera d'y aller et ça nous cassera tous nos repères.
+		if($numL < $this->nl - $this->_nlaff)
+			return;
+			
 		$this->_sortir("\r");
 		if(($dépl = $numL - $this->y))
 			$this->_sortir('['.($dépl < 0 ? -$dépl.'A' : $dépl.'B'));
