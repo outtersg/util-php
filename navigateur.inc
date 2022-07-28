@@ -37,13 +37,25 @@ class Navigateur
 	function effacerCookies() { $this->cookies = array(); $this->cookiesTasses = null; }
 	function __construct() { $this->derniere = null; $this->effacerCookies(); $this->données = array(); }
 	
-	function tasserCookies()
+	function tasserCookies($url)
 	{
-		$noms = array_keys($this->cookies);
+		/* Consolidation des traceurs concernés. */
+		
+		if(preg_match('#^https?://([^/]*)#', $url, /*&*/ $rés))
+			$domaineActuel = $rés[1];
+		$traceurs = [];
+		foreach($this->cookies as $domaine => $traceursDomaine)
+			if($domaine == $domaineActuel) /* À FAIRE: gérer les multi-domaines. */
+				/* À FAIRE: filtrer aussi sur le chemin. */
+				$traceurs += $traceursDomaine;
+		
+		/* Sérialisation. */
+		
+		$noms = array_keys($traceurs);
 		$n = count($noms) - 1;
 		if($n < 0) { $this->cookiesTasses = null; return; }
 		$this->cookiesTasses = array();
-		foreach($this->cookies as $clé => $val)
+		foreach($traceurs as $clé => $val)
 			$this->cookiesTasses[] = $clé.'='.$val;
 		$this->cookiesTasses = implode('; ', $this->cookiesTasses);
 	}
@@ -102,6 +114,7 @@ class Navigateur
 			curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
 			$url = $this->url($url);
 			curl_setopt($c, CURLOPT_URL, $url);
+			$this->tasserCookies($url);
 			curl_setopt($c, CURLOPT_COOKIE, $this->cookiesTasses);
 			if($this->cookiesTasses)
 			$this->_diag(0, $this->cookiesTasses);
@@ -141,7 +154,6 @@ class Navigateur
 			$r = curl_exec($c);
 			$this->retour = curl_getinfo($c, CURLINFO_HTTP_CODE);
 			curl_close($c);
-			$this->tasserCookies();
 			
 			if(!$this->suivreLocations)
 				return $r;
@@ -166,6 +178,8 @@ class Navigateur
 	
 	function recupererEnTete($enTete)
 	{
+		if(preg_match('#^https?://([^/]*)#', $this->derniere, /*&*/ $rés))
+			$domaine = $rés[1];
 		if($this->continuer && (strpos($enTete, 'Set-Cookie: ') === 0))
 		{
 			$ligne = trim(substr($enTete, 0xc));
@@ -177,11 +191,11 @@ class Navigateur
 				{
 					if(strpos($rés[2][$i], '-1970') !== false)
 					{
-						unset($this->cookies[$nom]);
+						unset($this->cookies[$domaine][$nom]);
 						return;
 					}
 				}
-			$this->cookies[$nom] = $val;
+			$this->cookies[$domaine][$nom] = $val;
 		}
 		// À FAIRE: la raison d'être de cette fonction ne serait-elle pas CURLINFO_EFFECTIVE_URL?
 		else if(strpos($enTete, 'Location: ') === 0 || strpos($enTete, 'location: ') === 0) // Sale con d'IIS de photoservice.com!
@@ -195,7 +209,6 @@ class Navigateur
 			$this->derniere = &$session['derniere'];
 			$this->cookies = &$session['cookies'];
 			$this->données = &$session['données'];
-			$this->tasserCookies();
 		}
 		else
 		{
