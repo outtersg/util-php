@@ -76,7 +76,7 @@ class Navigateur
 				if(($pos = strrpos($this->derniere, '/')) != 0)
 					return substr($this->derniere, 0, $pos + 1).$url;
 			}
-			if(preg_match('#^http://[^/]*$#', $url))
+			if(preg_match('#^https?://[^/]*$#', $url))
 				$url = $url.'/';
 			return $url;
 	}
