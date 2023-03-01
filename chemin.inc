@@ -59,7 +59,7 @@ class Chemin
 	/* Constructeur. Le paramètre 'depuis' doit être renseigné si le répertoire
 	 * de départ est différent du répertoire courant (d'exécution du script). Il
 	 * permet l'exploration correcte du système de fichier autour du chemin. */
-	function Chemin($acces = null, $depuis = null)
+	public function __construct($acces = null, $depuis = null)
 	{
 		$this->chemin = array();
 		$this->fichier = null;
