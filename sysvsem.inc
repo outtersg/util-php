@@ -33,7 +33,7 @@ class SSem
 		return self::$instance;
 	}
 	
-	function SSem()
+	public function __construct()
 	{
 		register_shutdown_function(array(&$this, 'sortir'));
 	}
