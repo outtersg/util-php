@@ -229,6 +229,12 @@ class Navigateur
 		return $nouveau;
 	}
 	
+	public $retour;
+	public $page;
+	public $jeton;
+	public $continuer;
+	public $cookiesTasses;
+	
 	protected $derniere;
 	protected $cookies;
 	public $données; // Données supplémentaires attachées à la session, laissées à la discrétion de l'utilisateur (ex.: résultat de l'interprétation de la page chargée).
