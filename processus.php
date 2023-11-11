@@ -99,8 +99,16 @@ class Processus
 	{
 		stream_set_blocking($this->_tubes[0], false);
 		/* À FAIRE: $source Resource; $source fonction. */
-		if(is_string($source) && is_file($source))
+		if(is_string($source))
+		{
+			if(is_file($source))
 			$this->_source = fopen($source, 'rb');
+			else
+			{
+				$this->_source = true;
+				$this->_résiduSource = $source;
+			}
+		}
 	}
 	
 	protected function _écrire($source, $stdinProcessus)
@@ -111,7 +119,12 @@ class Processus
 			if($this->_source === false) // Plus rien à entrer.
 				return false;
 			if(!isset($this->_résiduSource))
+		{
+			if(is_resource($this->_source))
 				$this->_résiduSource = fread($this->_source, 0x100000);
+			else
+				$this->_résiduSource = '';
+		}
 			if
 			(
 				!strlen($this->_résiduSource)
@@ -119,6 +132,7 @@ class Processus
 			)
 			{
 				unset($this->_résiduSource);
+			if(is_resource($this->_source))
 				fclose($this->_source);
 				$this->_source = false;
 				return false;
