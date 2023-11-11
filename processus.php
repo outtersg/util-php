@@ -134,6 +134,11 @@ class Processus
 	{
 		fwrite($fd == 1 ? STDOUT : STDERR, $bloc);
 	}
+	
+	protected $_fils;
+	protected $_tubes;
+	protected $_source;
+	protected $_résiduSource;
 }
 
 class ProcessusCauseur extends Processus
@@ -153,6 +158,8 @@ class ProcessusCauseur extends Processus
 	{
 		return $this->_contenuSortie;
 	}
+	
+	protected $_contenuSortie;
 }
 
 class ProcessusLignes extends Processus
@@ -192,6 +199,9 @@ class ProcessusLignes extends Processus
 		if(isset($this->_sorteur))
 			call_user_func($this->_sorteur, $ligne, $fd);
 	}
+	
+	protected $_sorteur;
+	protected $_contenuSorties;
 }
 
 ?>
