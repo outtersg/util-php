@@ -183,6 +183,14 @@ class ProcessusCauseur extends Processus
 
 class ProcessusLignes extends Processus
 {
+	public $exprFinDeLigne = "#[\n]#";
+	/**
+	 * Ajouté en fin de fichier si absent.
+	 * Doit être vérifié par $exprFinDeLigne.
+	 */
+	public $boucleur = "\n";
+	/* À FAIRE: vérifier qu'il est vérifié par la regex. */
+	
 	public function __construct($argv, $sorteurLignes = null)
 	{
 		$this->_sorteur = $sorteurLignes;
@@ -196,27 +204,33 @@ class ProcessusLignes extends Processus
 		$r = parent::attendre($stdin);
 		foreach(array(1, 2) as $fd)
 			if(isset($this->_contenuSorties[$fd]))
-				$this->_sortie($fd, "\n");
+				$this->_sortie($fd, $this->boucleur);
 		return $r;
 	}
 	
 	protected function _sortie($fd, $bloc)
 	{
+		if(!isset($bloc)) { $touteFin = true; $bloc = ''; }
 		if(isset($this->_contenuSorties[$fd]))
 			$bloc = $this->_contenuSorties[$fd].$bloc;
+		// preg_match_all est bien plus rapide qu'un strpos (24 ms puis 4 ms, contre 1,7 s, pour un fichier de 4 Mo).
+		// php -r '$c = file_get_contents("0.sql"); for($i = 10; --$i >= 0;) { $t0 = microtime(true); preg_match_all("#\n#", $c, $re, PREG_OFFSET_CAPTURE); $r = []; foreach($re[0] as $re1) $r[] = $re1[1]; echo (microtime(true) - $t0)." p ".count($r)."\n"; $t0 = microtime(true); $r = []; for($d = 0; ($f = strpos($c, "\n", $d)) !== false; $d = $f + 1) $r[] = $d; echo (microtime(true) - $t0)." s ".count($r)."\n"; }'
+		preg_match_all($this->exprFinDeLigne, $bloc, $fragments, PREG_OFFSET_CAPTURE);
 		$début = 0;
-		while(($fin = strpos($bloc, "\n", $début)) !== false)
+		foreach($fragments[0] as $fragment)
 		{
-			$this->_sortirLigne(substr($bloc, $début, $fin - $début), $fd);
-			$début = $fin + 1;
+			$this->_sortirLigne(substr($bloc, $début, $fragment[1] - $début), $fd, $fragment[0]);
+			$début = $fragment[1];
 		}
 		$this->_contenuSorties[$fd] = $début < strlen($bloc) ? substr($bloc, $début) : null;
+		if(isset($this->_contenuSorties[$fd]) && isset($touteFin))
+			$this->_sortirLigne($this->_contenuSorties[$fd], $fd, $this->boucleur);
 	}
 	
-	protected function _sortirLigne($ligne, $fd)
+	protected function _sortirLigne($ligne, $fd, $finDeLigne)
 	{
 		if(isset($this->_sorteur))
-			call_user_func($this->_sorteur, $ligne, $fd);
+			call_user_func($this->_sorteur, $ligne, $fd, $finDeLigne);
 	}
 	
 	protected $_sorteur;
