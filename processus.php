@@ -204,18 +204,32 @@ class ProcessusCauseur extends Processus
 
 class ProcessusLignes extends Processus
 {
-	public $exprFinDeLigne = "#[\n]#";
-	/**
-	 * Ajouté en fin de fichier si absent.
-	 * Doit être vérifié par $exprFinDeLigne.
-	 */
-	public $boucleur = "\n";
-	/* À FAIRE: vérifier qu'il est vérifié par la regex. */
-	
 	public function __construct($argv, $sorteurLignes = null)
 	{
+		if(!isset($this->_fdls))
+			$this->finDeLigne("#[\n]#");
 		$this->_sorteur = $sorteurLignes;
 		parent::__construct($argv);
+	}
+	
+	public function finDeLigne($stdout, $stderr = null)
+	{
+		foreach(array(1 => $stdout, 2 => $stderr) as $fd => $expr)
+		{
+			$this->_fdls[$fd] = $expr;
+			
+			// Et un boucleur adapté.
+			
+			if(!isset($expr)) $this->_boucleurs[$fd] = null;
+			else if(!isset($this->_boucleurs[$fd]) || !preg_match($expr, $this->_boucleurs[$fd]))
+			{
+				// Recherche du premier caractère qui se retrouverait dans $expr.
+				$boucleur = substr(strtr($expr, '[]|*+', ''), 0, 1);
+				if(!preg_match($expr, $boucleur))
+					$boucleur = "\n";
+				$this->_boucleurs[$fd] = $boucleur;
+			}
+		}
 	}
 	
 	public function attendre($stdin = null)
@@ -225,7 +239,7 @@ class ProcessusLignes extends Processus
 		$r = parent::attendre($stdin);
 		foreach(array(1, 2) as $fd)
 			if(isset($this->_contenuSorties[$fd]))
-				$this->_sortie($fd, $this->boucleur);
+				$this->_sortie($fd, $this->_boucleurs[$fd]);
 		return $r;
 	}
 	
@@ -238,7 +252,10 @@ class ProcessusLignes extends Processus
 			$bloc = $this->_contenuSorties[$fd].$bloc;
 		// preg_match_all est bien plus rapide qu'un strpos (24 ms puis 4 ms, contre 1,7 s, pour un fichier de 4 Mo).
 		// php -r '$c = file_get_contents("0.sql"); for($i = 10; --$i >= 0;) { $t0 = microtime(true); preg_match_all("#\n#", $c, $re, PREG_OFFSET_CAPTURE); $r = []; foreach($re[0] as $re1) $r[] = $re1[1]; echo (microtime(true) - $t0)." p ".count($r)."\n"; $t0 = microtime(true); $r = []; for($d = 0; ($f = strpos($c, "\n", $d)) !== false; $d = $f + 1) $r[] = $d; echo (microtime(true) - $t0)." s ".count($r)."\n"; }'
-		preg_match_all($this->exprFinDeLigne, $bloc, $fragments, PREG_OFFSET_CAPTURE);
+		if(isset($this->_fdls[$fd]))
+			preg_match_all($this->_fdls[$fd], $bloc, $fragments, PREG_OFFSET_CAPTURE);
+		else
+			$fragments = array(array(array($bloc, 0)));
 		$début = 0;
 		foreach($fragments[0] as $fragment)
 		{
@@ -247,7 +264,7 @@ class ProcessusLignes extends Processus
 		}
 		$this->_contenuSorties[$fd] = $début < strlen($bloc) ? substr($bloc, $début) : null;
 		if(isset($this->_contenuSorties[$fd]) && isset($touteFin))
-			$r = $this->_sortirLigne($this->_contenuSorties[$fd], $fd, $this->boucleur, $r);
+			$r = $this->_sortirLigne($this->_contenuSorties[$fd], $fd, $this->_boucleurs[$fd], $r);
 		
 		return $r;
 	}
@@ -262,6 +279,12 @@ class ProcessusLignes extends Processus
 		return $r !== null || $accuRés === null ? $r : $accuRés;
 	}
 	
+	protected $_fdls;
+	/**
+	 * Ajouté en fin de fichier si absent.
+	 * Doit être vérifié par $_fdls.
+	 */
+	protected $_boucleurs;
 	protected $_sorteur;
 	protected $_contenuSorties;
 }
