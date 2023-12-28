@@ -48,6 +48,19 @@ class Processus
 	
 	public function attendre($stdin = null)
 	{
+		while(!is_numeric($reTour = $this->attendreQuelqueChose($stdin))) $stdin = null;
+		return $reTour;
+	}
+	
+	/**
+	 * Attend qu'il se passe quelque chose de particulier.
+	 * Le "particulier" étant déterminé par renvoi par _sortie() d'autre chose que du null; par exemple un booléen, ou un objet (éviter les entiers, indistinctibles du retour de fin de processus).
+	 * N.B.: pourrait s'apparenter à un yield en PHP 5.5.
+	 */
+	public function attendreQuelqueChose($stdin = null)
+	{
+		if(!isset($this->_))
+		{
 		if(!$stdin)
 		{
 		fclose($this->_tubes[0]);
@@ -62,11 +75,22 @@ class Processus
 
 		$sorties = array(1 => $this->_tubes[1], 2 => $this->_tubes[2]);
 		$erreurs = array();
+			$this->_ = [ $entrees, $sorties, $erreurs ];
+		}
+		else
+		{
+			list($entrees, $sorties, $erreurs) = $this->_;
+			if(is_object($this->_source) && method_exists($this->_source, 'poursuivre'))
+				$this->_source->poursuivre($stdin);
+		}
 		
 		while(count($sorties) + count($entrees))
 		{
 			$sortiesModif = $sorties; // Copie de tableau.
 			$entréesModifiée = $entrees;
+			if(is_object($this->_source) && method_exists($this->_source, 'plein') && $this->_source->plein() === false)
+				unset($entréesModifiée[0]);
+				/* À FAIRE: proposer à la SourceProcessusFlux de participer au stream_select, en alternative au plein() qui n'est pas temps réel. */
 			if($nFlux = stream_select($sortiesModif, $entréesModifiée, $erreurs, 1))
 			{
 				foreach($sortiesModif as $flux)
@@ -75,15 +99,22 @@ class Processus
 						if($fluxSurveillé == $flux)
 							break;
 					$bloc = fread($flux, 0x4000);
-					$this->_sortie($fd, $bloc);
+					$retourSortir = $this->_sortie($fd, $bloc);
 					if(strlen($bloc) == 0) // Fin de fichier, on arrête de le surveiller.
 						unset($sorties[$fd]);
+					
+					if(isset($retourSortir))
+					{
+						$this->_ = [ $entrees, $sorties, $erreurs ];
+						return $retourSortir;
+					}
 				}
 				if(count($entréesModifiée))
-					if($this->_écrire($stdin, $this->_tubes[0]) === false)
+					if($this->_écrire($this->_tubes[0]) === false)
 					{
 						unset($entrees[0]); // Il n'y en a qu'une.
 						fclose($this->_tubes[0]);
+						unset($this->_source);
 					}
 			}
 		}
@@ -91,6 +122,8 @@ class Processus
 		fclose($this->_tubes[1]);
 		fclose($this->_tubes[2]);
 		$retour = proc_close($this->_fils);
+		
+		unset($this->_);
 		
 		return $retour;
 	}
@@ -102,30 +135,22 @@ class Processus
 		if(is_string($source))
 		{
 			if(is_file($source))
-			$this->_source = fopen($source, 'rb');
+				$this->_source = new SourceProcessusFlux(fopen($source, 'rb'));
 			else
-			{
-				$this->_source = true;
-				$this->_résiduSource = $source;
-			}
+				$this->_source = new SourceProcessusChaîne($source);
 		}
+		$this->_résiduSource = '';
 	}
 	
-	protected function _écrire($source, $stdinProcessus)
+	protected function _écrire($stdinProcessus)
 	{
 		/* À FAIRE: $source Resource; $source fonction. */
-		if(is_string($source) && isset($this->_source))
-		{
+		if(!isset($this->_source)) return; // null et non false: le false est réservé au processus cru ouvert mais en fait fermé; là on est su fermé depuis longtemps.
 			if($this->_source === false) // Plus rien à entrer.
 				return false;
-			if(!isset($this->_résiduSource))
-			if(is_resource($this->_source))
-					if
-					(
-						($this->_résiduSource = fread($this->_source, 0x100000)) === false
-						|| (!strlen($this->_résiduSource) && feof($this->_source))
-					)
-						unset($this->_résiduSource);
+		if(!strlen($this->_résiduSource))
+			$this->_résiduSource = $this->_source->lire();
+		
 			// Si on n'a rien pu écrire (alors que nous avons été invoqués suite à un stream_select nous informant qu'on pouvait écrire),
 			// c'est que l'autre côté a été fermé. Du moins c'est le comportement observé sur un psql tombant sur une instruction SQL invalide.
 			if
@@ -137,16 +162,11 @@ class Processus
 			
 			if(!isset($this->_résiduSource))
 			{
-			if(is_resource($this->_source))
-				fclose($this->_source);
-				$this->_source = false;
+			$this->_source->terminer();
+				$this->_source = false; // false et non null: un dernier tour pour ne pas oublier de fermer le symétrique (entrée du Processus dans lequel on déversait notre source).
 				return false;
 			}
-			if($nÉcrits == strlen($this->_résiduSource))
-				unset($this->_résiduSource);
-			else
 				$this->_résiduSource = substr($this->_résiduSource, $nÉcrits);
-		}
 	}
 	
 	protected function _sortie($fd, $bloc)
@@ -158,6 +178,7 @@ class Processus
 	protected $_tubes;
 	protected $_source;
 	protected $_résiduSource;
+	protected $_; // Contexte d'attendreQuelqueChose().
 }
 
 class ProcessusCauseur extends Processus
@@ -210,6 +231,8 @@ class ProcessusLignes extends Processus
 	
 	protected function _sortie($fd, $bloc)
 	{
+		$r = null;
+		
 		if(!isset($bloc)) { $touteFin = true; $bloc = ''; }
 		if(isset($this->_contenuSorties[$fd]))
 			$bloc = $this->_contenuSorties[$fd].$bloc;
@@ -219,22 +242,113 @@ class ProcessusLignes extends Processus
 		$début = 0;
 		foreach($fragments[0] as $fragment)
 		{
-			$this->_sortirLigne(substr($bloc, $début, $fragment[1] - $début), $fd, $fragment[0]);
-			$début = $fragment[1];
+			$r = $this->_sortirLigne(substr($bloc, $début, $fragment[1] - $début), $fd, $fragment[0], $r);
+			$début = $fragment[1] + strlen($fragment[0]);
 		}
 		$this->_contenuSorties[$fd] = $début < strlen($bloc) ? substr($bloc, $début) : null;
 		if(isset($this->_contenuSorties[$fd]) && isset($touteFin))
-			$this->_sortirLigne($this->_contenuSorties[$fd], $fd, $this->boucleur);
+			$r = $this->_sortirLigne($this->_contenuSorties[$fd], $fd, $this->boucleur, $r);
+		
+		return $r;
 	}
 	
-	protected function _sortirLigne($ligne, $fd, $finDeLigne)
+	protected function _sortirLigne($ligne, $fd, $finDeLigne, $accuRés)
 	{
-		if(isset($this->_sorteur))
+		if(!isset($this->_sorteur)) return;
+		
+		$r =
 			call_user_func($this->_sorteur, $ligne, $fd, $finDeLigne);
+		
+		return $r !== null || $accuRés === null ? $r : $accuRés;
 	}
 	
 	protected $_sorteur;
 	protected $_contenuSorties;
+}
+
+class SourceProcessus
+{
+
+}
+
+class SourceProcessusChaîne extends SourceProcessus
+{
+	public function __construct($chaîne = null)
+	{
+		$this->poursuivre($chaîne);
+	}
+	
+	public function plein()
+	{
+		return isset($this->_chaîne) && strlen($this->_chaîne) > 0;
+	}
+	
+	public function lire()
+	{
+		if(isset($this->_chaîne))
+		{
+			$r = $this->_chaîne;
+			$this->_chaîne = '';
+			return $r;
+		}
+	}
+	
+	public function ouverte()
+	{
+		return $this->_dedans;
+	}
+	
+	public function terminer()
+	{
+	}
+	
+	/**
+	 * Pour réalimenter la source.
+	 */
+	public function poursuivre($ajout)
+	{
+		if($this->_dedans = isset($ajout))
+			if(isset($this->_chaîne))
+				$this->_chaîne .= $ajout;
+			else
+				$this->_chaîne = $ajout;
+	}
+	
+	protected $_chaîne;
+	protected $_dedans;
+}
+
+class SourceProcessusFlux extends SourceProcessus
+{
+	public function __construct($fd)
+	{
+		$this->_flux = $fd;
+	}
+	
+	public function lire()
+	{
+		if(!isset($this->_flux)) return null;
+		if(!strlen($r = fread($this->_flux, 0x100000)) && !$this->ouverte())
+		{
+			$this->terminer();
+			$r = null;
+		}
+		
+		return $r;
+	}
+	
+	public function ouverte()
+	{
+		return isset($this->_flux) && !feof($this->_flux);
+	}
+	
+	public function terminer()
+	{
+		if(isset($this->_flux)) fclose($this->_flux);
+		$this->_flux = null;
+	}
+	
+	protected $_flux;
 }
 
 ?>
