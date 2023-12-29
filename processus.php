@@ -88,19 +88,25 @@ class Processus
 		{
 			$sortiesModif = $sorties; // Copie de tableau.
 			$entréesModifiée = $entrees;
-			if(is_object($this->_source) && method_exists($this->_source, 'plein') && $this->_source->plein() === false)
-				unset($entréesModifiée[0]);
+			
+			$this->_filsToujoursLà = proc_get_status($this->_fils); if($this->_filsToujoursLà) $this->_filsToujoursLà = $this->_filsToujoursLà['running'];
 				/* À FAIRE: proposer à la SourceProcessusFlux de participer au stream_select, en alternative au plein() qui n'est pas temps réel. */
-			if($nFlux = stream_select($sortiesModif, $entréesModifiée, $erreurs, 1))
+			if
+			(
+				($nFlux = stream_select($sortiesModif, $entréesModifiée, $erreurs, $this->_filsToujoursLà ? 1 : 0, 10000))
+				// Si le processus est tombé et qu'on n'a plus rien à lire, on rentre dans le corps pour fermer proprement notre côté.
+				|| (!$this->_filsToujoursLà && (list($entréesModifiée, $sortiesModif, $erreurs) = array($entrees, $sorties, $erreurs)))
+			)
 			{
 				foreach($sortiesModif as $flux)
 				{
 					foreach($sorties as $fd => $fluxSurveillé)
 						if($fluxSurveillé == $flux)
 							break;
-					$bloc = fread($flux, 0x4000);
+					// On ne lit pas une pseudo-disponibilité (émulée si !$this->_filsToujoursLà, pour fermeture).
+					$bloc = $nFlux ? fread($flux, 0x4000) : null;
 					$retourSortir = $this->_sortie($fd, $bloc);
-					if(strlen($bloc) == 0) // Fin de fichier, on arrête de le surveiller.
+					if(!isset($bloc) || strlen($bloc) == 0) // Fin de fichier, on arrête de le surveiller.
 						unset($sorties[$fd]);
 					
 					if(isset($retourSortir))
@@ -150,6 +156,8 @@ class Processus
 				return false;
 		if(!strlen($this->_résiduSource))
 			$this->_résiduSource = $this->_source->lire();
+		if($this->_résiduSource === '' && !$this->_filsToujoursLà)
+			unset($this->_résiduSource);
 		
 			// Si on n'a rien pu écrire (alors que nous avons été invoqués suite à un stream_select nous informant qu'on pouvait écrire),
 			// c'est que l'autre côté a été fermé. Du moins c'est le comportement observé sur un psql tombant sur une instruction SQL invalide.
@@ -175,6 +183,7 @@ class Processus
 	}
 	
 	protected $_fils;
+	protected $_filsToujoursLà;
 	protected $_tubes;
 	protected $_source;
 	protected $_résiduSource;
