@@ -54,6 +54,16 @@ class Processus
 		return $reTour;
 	}
 	
+	protected function _filsToujoursLà()
+	{
+		if(!isset($this->_fils)) return false;
+		$état = proc_get_status($this->_fils);
+		if(!$état) return false;
+		if(!($this->_filsToujoursLà = $état['running']) && !isset($this->_filsStatut)) // D'après la doc: exitcode n'est lisible qu'à la première consultation en !running. On mémorise avant de perdre l'info.
+			$this->_filsStatut = $état['exitcode'];
+		return $this->_filsToujoursLà;
+	}
+	
 	/**
 	 * Attend qu'il se passe quelque chose de particulier.
 	 * Le "particulier" étant déterminé par renvoi par _sortie() d'autre chose que du null; par exemple un booléen, ou un objet (éviter les entiers, indistinctibles du retour de fin de processus).
@@ -91,7 +101,7 @@ class Processus
 			$sortiesModif = $sorties; // Copie de tableau.
 			$entréesModifiée = $entrees;
 			
-			$this->_filsToujoursLà = proc_get_status($this->_fils); if($this->_filsToujoursLà) $this->_filsToujoursLà = $this->_filsToujoursLà['running'];
+			$this->_filsToujoursLà();
 				/* À FAIRE: proposer à la SourceProcessusFlux de participer au stream_select, en alternative au plein() qui n'est pas temps réel. */
 			if
 			(
@@ -129,7 +139,12 @@ class Processus
 		
 		fclose($this->_tubes[1]);
 		fclose($this->_tubes[2]);
+		// De belle mort: si le fils a déjà quitté proprement (par exemple suite à notre fermeture d'entrée),
+		// ou si on réussit la fermeture de notre côté (et on laisse le fils se débrouiller pour mourir tout seul).
+		$this->_filsToujoursLà();
 		$retour = proc_close($this->_fils);
+		// Comme commenté dans https://fr.php.net/proc_close: parfois le code de retour est un peu foireux, notamment si le processus est mort de sa belle mort (par exemple détectant qu'on lui fermait l'entrée). proc_get_status() est plus fiable, on l'exploite donc.
+		if($retour == -1) $retour = $this->_filsStatut;
 		
 		unset($this->_);
 		
@@ -187,6 +202,7 @@ class Processus
 	
 	protected $_fils;
 	protected $_filsToujoursLà;
+	protected $_filsStatut;
 	protected $_tubes;
 	protected $_source;
 	protected $_résiduSource;
