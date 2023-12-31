@@ -48,6 +48,8 @@ class Processus
 	
 	public function attendre($stdin = null)
 	{
+		if(is_string($stdin) && !is_file($stdin))
+			$stdin = new SourceProcessusChaîne($stdin);
 		while(!is_numeric($reTour = $this->attendreQuelqueChose($stdin))) $stdin = null;
 		return $reTour;
 	}
@@ -141,10 +143,11 @@ class Processus
 		if(is_string($source))
 		{
 			if(is_file($source))
-				$this->_source = new SourceProcessusFlux(fopen($source, 'rb'));
+				$source = new SourceProcessusFlux(fopen($source, 'rb'));
 			else
-				$this->_source = new SourceProcessusChaîne($source);
+				$source = new SourceProcessusChaîne($source, true);
 		}
+		$this->_source = $source;
 		$this->_résiduSource = '';
 	}
 	
@@ -305,9 +308,10 @@ class SourceProcessus
 
 class SourceProcessusChaîne extends SourceProcessus
 {
-	public function __construct($chaîne = null)
+	public function __construct($chaîne = null, $réalimentable = false)
 	{
 		$this->poursuivre($chaîne);
+		$this->_réalimentable = $réalimentable;
 	}
 	
 	public function plein()
@@ -320,7 +324,7 @@ class SourceProcessusChaîne extends SourceProcessus
 		if(isset($this->_chaîne))
 		{
 			$r = $this->_chaîne;
-			$this->_chaîne = '';
+			$this->_chaîne = $this->_réalimentable ? '' : null;
 			return $r;
 		}
 	}
@@ -340,14 +344,18 @@ class SourceProcessusChaîne extends SourceProcessus
 	public function poursuivre($ajout)
 	{
 		if($this->_dedans = isset($ajout))
+		{
+			if(!$this->_réalimentable) throw new Exception('Source non réalimentable');
 			if(isset($this->_chaîne))
 				$this->_chaîne .= $ajout;
 			else
 				$this->_chaîne = $ajout;
+		}
 	}
 	
 	protected $_chaîne;
 	protected $_dedans;
+	protected $_réalimentable = true;
 }
 
 class SourceProcessusFlux extends SourceProcessus
