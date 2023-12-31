@@ -283,7 +283,7 @@ class ProcessusLignes extends Processus
 		if(isset($this->_fdls[$fd]))
 			preg_match_all($this->_fdls[$fd], $bloc, $fragments, PREG_OFFSET_CAPTURE);
 		else
-			$fragments = array(array(array($bloc, 0)));
+			$fragments = array(array(array('', strlen($bloc))));
 		$début = 0;
 		foreach($fragments[0] as $fragment)
 		{
