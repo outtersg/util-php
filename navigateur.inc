@@ -172,7 +172,7 @@ class Navigateur
 	{
 		$page = $this->page = $this->aller($url, $champs);
 		$r = preg_match($trouver, $page, $réponses, 0);
-		if(!$r) { echo '# Impossible de récupérer '.$commentÇaSAppelle.'.'."\n"; return false; }
+		if(!$r) { fprintf(STDERR, '[31m# Impossible de récupérer '.$commentÇaSAppelle.'.[0m'."\n"); return false; }
 		return $réponses[1];
 	}
 	
