@@ -301,8 +301,10 @@ class ProcessusLignes extends Processus
 	{
 		if(!isset($this->_sorteur)) return;
 		
-		$r =
-			call_user_func($this->_sorteur, $ligne, $fd, $finDeLigne);
+		$params = array($ligne, $fd, $finDeLigne);
+		if(is_array($sorteur = $this->_sorteur) && count($sorteur) > 2)
+			$params = array_merge($params, array_splice($sorteur, 2));
+		$r = call_user_func_array($sorteur, $params);
 		
 		return $r !== null || $accuRés === null ? $r : $accuRés;
 	}
