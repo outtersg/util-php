@@ -97,11 +97,9 @@ class Processus
 			if(isset($this->_source) && is_object($this->_source) && method_exists($this->_source, 'poursuivre'))
 				$this->_source->poursuivre($stdin);
 		
-		while(count($this->_[0]) + count($this->_[1]))
+		while(count($this->_[0]) + count($this->_[1]) + count($this->_évs))
 			if(($qqc = self::Aniqsniq(array($this))))
 				return $qqc[1]; // Sortie prématurée en cas d'événement notable.
-		
-		return $this->_clore();
 	}
 	
 	protected function _clore()
@@ -148,7 +146,13 @@ class Processus
 					unset($this->_source);
 				}
 				break;
+			case self::FINI:
+				$r = $this->_clore();
+				break;
 		}
+		// Si un événement de type flux a achevé de vider nos descripteurs, le prochain tour sera le signal de fin.
+		if($sens != self::FINI && !count($this->_[0]) && !count($this->_[1]))
+			$this->_évs[] = array(self::FINI, 0, 0);
 		
 		return array($this, $r);
 	}
@@ -273,6 +277,7 @@ class Processus
 	
 	const PÀF = 'prêt à fournir'; // Notre processus a des choses à nous dire.
 	const PÀM = 'prêt à manger'; // Notre processus a de la place pour qu'on lui balance de la donnée.
+	const FINI = 'fini'; // Notre processus est mort, reste à faire le ménage.
 }
 
 class ProcessusCauseur extends Processus
