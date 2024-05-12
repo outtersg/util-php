@@ -48,9 +48,7 @@ class Processus
 	
 	public function attendre($stdin = null)
 	{
-		if(is_string($stdin) && !is_file($stdin))
-			$stdin = new SourceProcessusChaîne($stdin);
-		while(!is_numeric($reTour = $this->attendreQuelqueChose($stdin))) $stdin = null;
+		while(!is_numeric($reTour = $this->attendreQuelqueChose($this->sourcePour($stdin)))) $stdin = null;
 		return $reTour;
 	}
 	
@@ -91,7 +89,7 @@ class Processus
 	public function attendreQuelqueChose($stdin = null)
 	{
 		if(!isset($this->_))
-			$this->brancher($stdin);
+			$this->brancher($this->sourcePour($stdin, true));
 		else
 			$pasLaPremièreFois = true;
 			list($entrees, $sorties, $erreurs) = $this->_;
@@ -205,18 +203,23 @@ class Processus
 				return $qqc;
 	}
 	
-	protected function _initialiserÉcritures($source)
+	public function sourcePour($source, $etÇaNEstPasFini = false)
 	{
-		stream_set_blocking($this->_tubes[0], false);
 		/* À FAIRE: $source Resource; $source fonction. */
 		if(is_string($source))
 		{
 			if(is_file($source))
 				$source = new SourceProcessusFlux(fopen($source, 'rb'));
 			else
-				$source = new SourceProcessusChaîne($source, true);
+				$source = new SourceProcessusChaîne($source, $etÇaNEstPasFini);
 		}
-		$this->_source = $source;
+		return $source;
+	}
+	
+	protected function _initialiserÉcritures($source)
+	{
+		stream_set_blocking($this->_tubes[0], false);
+		$this->_source = $this->sourcePour($source);
 		$this->_résiduSource = '';
 	}
 	
