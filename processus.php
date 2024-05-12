@@ -101,6 +101,11 @@ class Processus
 			if(($qqc = self::Aniqsniq(array($this))))
 				return $qqc[1]; // Sortie prématurée en cas d'événement notable.
 		
+		return $this->_clore();
+	}
+	
+	protected function _clore()
+	{
 		fclose($this->_tubes[1]);
 		fclose($this->_tubes[2]);
 		// De belle mort: si le fils a déjà quitté proprement (par exemple suite à notre fermeture d'entrée),
@@ -299,6 +304,8 @@ class ProcessusLignes extends Processus
 			$this->finDeLigne("#[\n]#");
 		$this->_sorteur = $sorteurLignes;
 		parent::__construct($argv);
+		foreach(array(1, 2) as $fd)
+			$this->_contenuSorties[$fd] = null;
 	}
 	
 	public function finDeLigne($stdout, $stderr = null)
@@ -321,11 +328,9 @@ class ProcessusLignes extends Processus
 		}
 	}
 	
-	public function attendre($stdin = null)
+	protected function _clore()
 	{
-		foreach(array(1, 2) as $fd)
-			$this->_contenuSorties[$fd] = null;
-		$r = parent::attendre($stdin);
+		$r = parent::_clore();
 		foreach(array(1, 2) as $fd)
 			if(isset($this->_contenuSorties[$fd]))
 				$this->_sortie($fd, $this->_boucleurs[$fd]);
