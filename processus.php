@@ -64,15 +64,8 @@ class Processus
 		return $this->_filsToujoursLà;
 	}
 	
-	/**
-	 * Attend qu'il se passe quelque chose de particulier.
-	 * Le "particulier" étant déterminé par renvoi par _sortie() d'autre chose que du null; par exemple un booléen, ou un objet (éviter les entiers, indistinctibles du retour de fin de processus).
-	 * N.B.: pourrait s'apparenter à un yield en PHP 5.5.
-	 */
-	public function attendreQuelqueChose($stdin = null)
+	public function brancher($stdin = null)
 	{
-		if(!isset($this->_))
-		{
 		if(!$stdin)
 		{
 		fclose($this->_tubes[0]);
@@ -88,54 +81,27 @@ class Processus
 		$sorties = array(1 => $this->_tubes[1], 2 => $this->_tubes[2]);
 		$erreurs = array();
 			$this->_ = [ $entrees, $sorties, $erreurs ];
-		}
+	}
+	
+	/**
+	 * Attend qu'il se passe quelque chose de particulier.
+	 * Le "particulier" étant déterminé par renvoi par _sortie() d'autre chose que du null; par exemple un booléen, ou un objet (éviter les entiers, indistinctibles du retour de fin de processus).
+	 * N.B.: pourrait s'apparenter à un yield en PHP 5.5.
+	 */
+	public function attendreQuelqueChose($stdin = null)
+	{
+		if(!isset($this->_))
+			$this->brancher($stdin);
 		else
-		{
+			$pasLaPremièreFois = true;
 			list($entrees, $sorties, $erreurs) = $this->_;
-			if(is_object($this->_source) && method_exists($this->_source, 'poursuivre'))
+		if(isset($pasLaPremièreFois))
+			if(isset($this->_source) && is_object($this->_source) && method_exists($this->_source, 'poursuivre'))
 				$this->_source->poursuivre($stdin);
-		}
 		
-		while(count($sorties) + count($entrees))
-		{
-			$sortiesModif = $sorties; // Copie de tableau.
-			$entréesModifiée = $entrees;
-			
-			$this->_filsToujoursLà();
-				/* À FAIRE: proposer à la SourceProcessusFlux de participer au stream_select, en alternative au plein() qui n'est pas temps réel. */
-			if
-			(
-				($nFlux = stream_select($sortiesModif, $entréesModifiée, $erreurs, $this->_filsToujoursLà ? 1 : 0, 10000))
-				// Si le processus est tombé et qu'on n'a plus rien à lire, on rentre dans le corps pour fermer proprement notre côté.
-				|| (!$this->_filsToujoursLà && (list($entréesModifiée, $sortiesModif, $erreurs) = array($entrees, $sorties, $erreurs)))
-			)
-			{
-				foreach($sortiesModif as $flux)
-				{
-					foreach($sorties as $fd => $fluxSurveillé)
-						if($fluxSurveillé == $flux)
-							break;
-					// On ne lit pas une pseudo-disponibilité (émulée si !$this->_filsToujoursLà, pour fermeture).
-					$bloc = $nFlux ? fread($flux, 0x4000) : null;
-					$retourSortir = $this->_sortie($fd, $bloc);
-					if(!isset($bloc) || strlen($bloc) == 0) // Fin de fichier, on arrête de le surveiller.
-						unset($sorties[$fd]);
-					
-					if(isset($retourSortir))
-					{
-						$this->_ = [ $entrees, $sorties, $erreurs ];
-						return $retourSortir;
-					}
-				}
-				if(count($entréesModifiée))
-					if($this->_écrire($this->_tubes[0]) === false)
-					{
-						unset($entrees[0]); // Il n'y en a qu'une.
-						fclose($this->_tubes[0]);
-						unset($this->_source);
-					}
-			}
-		}
+		while(count($this->_[0]) + count($this->_[1]))
+			if(($qqc = self::Aniqsniq(array($this))))
+				return $qqc[1]; // Sortie prématurée en cas d'événement notable.
 		
 		fclose($this->_tubes[1]);
 		fclose($this->_tubes[2]);
@@ -149,6 +115,94 @@ class Processus
 		unset($this->_);
 		
 		return $retour;
+	}
+	
+	/**
+	 * Traite le premier événement sur flux (préalablement détecté par Aniqsniq par exemple).
+	 * 
+	 * @return null|[ $this, <retour> ]
+	 */
+	protected function _traiterPremierÉv()
+	{
+		if(!($év = array_shift($this->_évs))) return;
+		
+		list($sens, $fd, $flux) = $év;
+		$r = null;
+		switch($sens)
+		{
+			case self::PÀF:
+				// On ne lit pas une pseudo-disponibilité (émulée si !$this->_filsToujoursLà, pour fermeture).
+				$bloc = isset($flux) ? fread($flux, 0x4000) : null;
+				$r = $this->_sortie($fd, $bloc);
+				if(!isset($bloc) || strlen($bloc) == 0) // Fin de fichier, on arrête de le surveiller.
+					unset($this->_[1][$fd]);
+				break;
+			case self::PÀM:
+				if($this->_écrire($this->_tubes[$év[1]]) === false)
+				{
+					unset($this->_[0][0]);
+					fclose($this->_tubes[$év[1]]);
+					unset($this->_source);
+				}
+				break;
+		}
+		
+		return array($this, $r);
+	}
+	
+	/**
+	 * Attendre N'Importe Quoi Sur N'Importe Qui.
+	 * Attend qu'il se passe quelque chose pour n'importe lequel d'une liste de processus.
+	 * 
+	 * @param Processus[] $ps Surveillés.
+	 */
+	public static function Aniqsniq($ps)
+	{
+		/*- Précédent tour de boucle -*/
+		
+		// Si au précédent coup on avait précalculé des événements sans les gérer (1 seul retour disputé par 2 processus), on dépile maintenant.
+		foreach($ps as $p)
+			if(($qqc = $p->_traiterPremierÉv()))
+				return $qqc;
+		
+		/*- Ce tour de boucle -*/
+		
+		$es = array(0 => array(), 1 => array()); // 0 regroupe les entrées de nos processus (donc là où on pourra écrire), 1 leurs sorties.
+		$surv = array();
+		$complémentÀVide = array();
+		$nToujoursLà = 0;
+		foreach($ps as $p)
+		{
+			if(($toujoursLà = $p->_filsToujoursLà()))
+				++$nToujoursLà;
+			foreach($es as $sens => $rien)
+				foreach($p->_[$sens] as $fd => $ressource)
+				{
+					$numSurv = count($surv);
+					$surv[$numSurv] = array($p, array($sens ? self::PÀF : self::PÀM, $fd));
+					$es[$sens][$numSurv] = $ressource;
+					// Si le processus est mort, on prépare un pseudo-événement de lecture à vide (EOF) qui sera agrégé à défaut de possibilité de lecture à plein.
+					if(!$toujoursLà)
+						$complémentÀVide[$numSurv] = null;
+				}
+		}
+		$erreurs = array();
+		// Temps d'attente: si un processus vient de mourir, pas la peine d'attendre, le stream_select n'est là que pour s'assurer en une dernière passe que ses tubes, qui ne risquent plus de se remplir, ont bien été consommés de notre côté.
+		if(stream_select($es[1], $es[0], $erreurs, $nToujoursLà == count($ps) ? 1 : 0, 10000))
+		{
+			// Donc là maintenant $es[1] contient les sorties de processus prêtes à être lues, $es[0] leurs entrées prêtes à manger.
+			// Le + $complémentÀVide fait que celui-ci ne transparaîtra que si le stream_select n'a rien détecté à faire sur cet identifiant.
+			foreach($es[1] + $es[0] + $complémentÀVide as $numSurv => $flux)
+			{
+				$év = $surv[$numSurv][1];
+				$év[] = $flux; // Soit le flux si c'est le stream_select qui voit du potentiel, soit null si c'est $complémentÀVide.
+				$surv[$numSurv][0]->_évs[] = $év;
+			}
+		}
+		
+		foreach($ps as $p)
+			if(($qqc = $p->_traiterPremierÉv()))
+				return $qqc;
 	}
 	
 	protected function _initialiserÉcritures($source)
@@ -207,6 +261,10 @@ class Processus
 	protected $_source;
 	protected $_résiduSource;
 	protected $_; // Contexte d'attendreQuelqueChose().
+	protected $_évs = array(); // Événements détectés en attente de traitement.
+	
+	const PÀF = 'prêt à fournir'; // Notre processus a des choses à nous dire.
+	const PÀM = 'prêt à manger'; // Notre processus a de la place pour qu'on lui balance de la donnée.
 }
 
 class ProcessusCauseur extends Processus
