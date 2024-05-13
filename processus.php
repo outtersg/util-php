@@ -52,6 +52,18 @@ class Processus
 		return $reTour;
 	}
 	
+	/**
+	 * Attend qu'un des processus de la liste se termine.
+	 * 
+	 * @return [ Processus, code retour ]
+	 */
+	public static function AttendreUn($processus)
+	{
+		while(count($processus))
+			if(($bouclage = self::Aniqsniq($processus)) && is_numeric($bouclage[1]))
+				return $bouclage;
+	}
+	
 	protected function _filsToujoursLà()
 	{
 		if(!isset($this->_fils)) return false;
@@ -93,6 +105,7 @@ class Processus
 		else
 			$pasLaPremièreFois = true;
 			list($entrees, $sorties, $erreurs) = $this->_;
+		/* BOGUE: pas appelé en cas d'Aniqsniq sans passer par nous. */
 		if(isset($pasLaPremièreFois))
 			if(isset($this->_source) && is_object($this->_source) && method_exists($this->_source, 'poursuivre'))
 				$this->_source->poursuivre($stdin);
