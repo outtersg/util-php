@@ -32,6 +32,7 @@ require_once('compo.php');
 
 class Chargeur
 {
+	public $chemin;
 	public $pile = array(); /* Pile des appels. */
 	public $mem = null;
 	public $tailleBloc = 0x1000;
