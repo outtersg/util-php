@@ -353,7 +353,7 @@ static function calculer($chose)
 static function obtenir_datation($secondes) { return Date::obtenir($secondes); }
 static function obtenir($secondes)
 {
-	$t = getdate($secondes);
+	$t = getdate((int)$secondes);
 	return array($t['year'], $t['mon'], $t['mday'], $t['hours'], $t['minutes'], $t['seconds']);
 }
 
