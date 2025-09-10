@@ -70,9 +70,8 @@ class Chargeur
 		if(isset($this->encodageDeRestitution))
 			xml_parser_set_option($interprete, XML_OPTION_TARGET_ENCODING, "UTF-8");
 		xml_parser_set_option($interprete, XML_OPTION_CASE_FOLDING, FALSE);
-		xml_set_object($interprete, $this);
-		xml_set_element_handler($interprete, 'entrer', 'sortir');
-		xml_set_character_data_handler($interprete, 'contenu');
+		xml_set_element_handler($interprete, array($this, 'entrer'), array($this, 'sortir'));
+		xml_set_character_data_handler($interprete, array($this, 'contenu'));
 		
 		$fin = false;
 		
