@@ -146,6 +146,7 @@ class HTOpus_Goulp
 class Dodo
 {
 	public $document = array();
+	public $errs;
 	protected $_pile = array();
 	protected $_actuel;
 	
