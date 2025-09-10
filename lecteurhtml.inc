@@ -27,7 +27,7 @@ class LecteurHtml
 	public $tailleBloc = 0x1000;
 	protected $pitinenfant; // Celui qui nous écoute raconter notre fichier à notre manière.
 	
-	function LecteurHtml($pourUntel)
+	public function __construct($pourUntel)
 	{
 		$this->pitinenfant = $pourUntel;
 	}

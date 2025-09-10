@@ -35,7 +35,7 @@ class FichierIci extends FichierZip
 	/* Variables relatives au fichier en cours d'inclusion. */
 	protected $fichier;
 	
-	function FichierIci($ou, $mode = false)
+	public function __construct($ou, $mode = false)
 	{
 		$this->moded = $mode === false ? 0755 : $mode;
 		$this->modef = $mode === false ? 0700 : $mode;

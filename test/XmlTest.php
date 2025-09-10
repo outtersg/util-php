@@ -24,9 +24,9 @@ TERMINE
 
 class CompoBidon extends CompoSimple
 {
-	function CompoBidon()
+	public function __construct()
 	{
-		$this->CompoSimple(array('chose' => &$this->chose));
+		parent::__construct(array('chose' => &$this->chose));
 	}
 }
 
