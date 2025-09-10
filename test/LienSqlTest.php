@@ -63,21 +63,21 @@ class NœudTest extends Nœud
 	
 	public function _ajouter($champ, $valeur, $inverseDéjàFait = false)
 	{
-		$ancienne = isset($this->_d[$champ]) ? $this->_d[$champ] : ($champ{0} == '<' ? array() : null);
+		$ancienne = isset($this->_d[$champ]) ? $this->_d[$champ] : ($champ[0] == '<' ? array() : null);
 		$diff = self::$Feuillu->diffAjout($ancienne, $valeur);
 		$this->_appliquerDiff($champ, $diff, $inverseDéjàFait);
 	}
 	
 	public function _retirer($champ, $valeur, $inverseDéjàFait = false)
 	{
-		$ancienne = isset($this->_d[$champ]) ? $this->_d[$champ] : ($champ{0} == '<' ? array() : null);
+		$ancienne = isset($this->_d[$champ]) ? $this->_d[$champ] : ($champ[0] == '<' ? array() : null);
 		$diff = self::$Feuillu->diffSuppression($ancienne, $valeur);
 		$this->_appliquerDiff($champ, $diff, $inverseDéjàFait);
 	}
 	
 	public function _changer($champ, $valeur)
 	{
-		$ancienne = isset($this->_d[$champ]) ? $this->_d[$champ] : ($champ{0} == '<' ? array() : null);
+		$ancienne = isset($this->_d[$champ]) ? $this->_d[$champ] : ($champ[0] == '<' ? array() : null);
 		$diff = self::$Feuillu->diff($ancienne, $valeur);
 		$this->_appliquerDiff($champ, $diff);
 	}

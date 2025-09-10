@@ -122,9 +122,9 @@ static function lireHeure($date, $tenterAussiLaDate)
 		/* Recherche du nombre */
 		
 		$debut = $fin;
-		while(--$debut >= 0 && false !== strpos(Date::$g_chiffres, $c = $date{$debut})) {}
+		while(--$debut >= 0 && false !== strpos(Date::$g_chiffres, $c = $date[$debut])) {}
 		$valeurs[] = ($debut + 1 < $fin ? intval(substr($date, $debut + 1, $fin)) : null);
-		while(--$debut >= 0 && false === strpos(Date::$g_chiffres, $c2 = $date{$debut}))
+		while(--$debut >= 0 && false === strpos(Date::$g_chiffres, $c2 = $date[$debut]))
 			$c = $c2.$c;
 		++$debut;
 		
@@ -246,7 +246,7 @@ static function lireJour($date)
 	while($fin > 0)
 	{
 		$debut = $fin;
-		while(--$debut >= 0 && false !== strpos(Date::$g_chiffres, $c = $date{$debut})) {}
+		while(--$debut >= 0 && false !== strpos(Date::$g_chiffres, $c = $date[$debut])) {}
 		if($debut == $fin - 1)
 		{
 			//print('### double séparateur dans la date '.$date.'.<br/>');

@@ -224,7 +224,7 @@ class Periode
 					$b1 = '_'.$b1;
 				for($z = 0; $z < strlen($b1); ++$z)
 				{
-					switch($b1{$z})
+					switch($b1[$z])
 					{
 						case '_':
 							$blocs[] = ($mode & Periode::$LE) ? ($nDates ? '_ à ' : '_ de ') : ($nDates ? '_ - ' : '');

@@ -60,7 +60,7 @@ class LecteurHtml
 						$memComm = substr($donnees, $debut < $taille - 2 ? $taille - 2 : $debut);
 						break;
 					}
-					if(($pos >= 2 && $donnees{$pos - 1} == '-' && $donnees{$pos - 2} == '-') || strstr('-->', ($memComm.substr($donnees, 0, 2)) !== false))
+					if(($pos >= 2 && substr($donnees, $pos - 2, 2) == '--') || strstr('-->', ($memComm.substr($donnees, 0, 2)) !== false))
 						$etat = 0;
 					$debut = $pos + 1;
 				}
@@ -82,7 +82,7 @@ class LecteurHtml
 					$debut = $pos;
 					$etat = 0;
 					if($mem !== null) { $cont = $mem.$cont; $mem = null; }
-					if($cont{1} == '/') // Balise fermante
+					if($cont[1] == '/') // Balise fermante
 					{
 						$nom = $this->nom($cont);
 						for($n = $i = count($this->pile); --$i >= 0;)
@@ -97,7 +97,7 @@ class LecteurHtml
 							}
 						}
 					}
-					else if($cont{strlen($cont)-2} == '/') // Balise auto-fermante
+					else if($cont[strlen($cont)-2] == '/') // Balise auto-fermante
 					{
 						$nom = $this->nom($cont);
 						$this->pile[] = $cont;
@@ -142,9 +142,9 @@ class LecteurHtml
 	
 	function nom($balise)
 	{
-		$debut = $balise{1} == '/' ? 2 : 1;
+		$debut = $balise[1] == '/' ? 2 : 1;
 		if(($fin = strpos($balise, ' ')) === false)
-			if($balise{$fin = strlen($balise) - 1} != '>' || $balise{--$fin} != '/')
+			if($balise[$fin = strlen($balise) - 1] != '>' || $balise[--$fin] != '/')
 				++$fin;
 		return substr($balise, $debut, $fin - $debut);
 	}

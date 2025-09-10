@@ -36,7 +36,7 @@ function crc32_continu($donnees, $valeurCourante = 0)
 	/* Calcul */
 	
 	for($n = strlen($donnees), $i = 0; $i < $n; ++$i)
-		$valeurCourante = $s[(ord($donnees{$i}) ^ $valeurCourante) & 0xff] ^ (($valeurCourante >> 8) & 0x00ffffff);
+		$valeurCourante = $s[(ord($donnees[$i]) ^ $valeurCourante) & 0xff] ^ (($valeurCourante >> 8) & 0x00ffffff);
 	
 	return $valeurCourante;
 }
